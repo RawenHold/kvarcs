@@ -1,0 +1,2247 @@
+"use client";
+
+import Image from "next/image";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  useScroll,
+  useSpring
+} from "framer-motion";
+import {
+  ArrowRight,
+  Calculator,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  Clock,
+  Factory,
+  Grid3X3,
+  Hammer,
+  Instagram,
+  List,
+  Mail,
+  MapPin,
+  Menu,
+  MessageCircle,
+  Moon,
+  PackageCheck,
+  Phone,
+  Ruler,
+  Search,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  Truck,
+  X,
+  ZoomIn,
+  ZoomOut
+} from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type TouchEvent
+} from "react";
+import { stones, type Stone } from "@/lib/catalog-data";
+import { partners } from "@/lib/partners-data";
+import { siteConfig } from "@/lib/site-config";
+import { translations, type Lang } from "@/lib/translations";
+import { cn, telHref } from "@/lib/utils";
+
+type Theme = "cloud" | "onyx";
+type ViewMode = "grid" | "list";
+
+type KvarcsSiteProps = {
+  portfolioImages?: string[];
+  certificateImages?: string[];
+};
+
+type PortfolioPageProps = {
+  images: string[];
+};
+
+type CatalogPageProps = {
+  certificateImages?: string[];
+};
+
+const themeStorageKey = "kvarcs-theme-v3";
+const legacyThemeStorageKeys = ["kvarcs-theme", "kvarcs-theme-v2"] as const;
+const logoVersion = "20260708-logo-context";
+
+const sectionCopy = {
+  ru: {
+    applicationsEyebrow: "Области применения",
+    applicationsTitle: "Кварц для поверхностей, которые работают каждый день",
+    portfolioEyebrow: "Портфолио",
+    portfolioTitle: "Готовые работы KVARC-S",
+    portfolioBody:
+      "Реальные проекты с кварцевыми поверхностями: кухни, острова, стойки, санузлы и коммерческие зоны.",
+    portfolioMore: "Открыть всё портфолио",
+    portfolioOpen: "Открыть фото",
+    portfolioEmpty: "Фотографии портфолио пока не добавлены.",
+    portfolioPageTitle: "Портфолио KVARC-S",
+    pageSize: "Показывать",
+    pageLabel: "Страница",
+    catalogMore: "Открыть каталог",
+    partnersMore: "Открыть обработчиков",
+    certificatesEyebrow: "Документы",
+    certificatesTitle: "Сертификаты качества",
+    certificateOpen: "Открыть сертификат",
+    close: "Закрыть",
+    previous: "Назад",
+    next: "Вперёд",
+    zoomIn: "Увеличить",
+    zoomOut: "Уменьшить"
+  },
+  uz: {
+    applicationsEyebrow: "Qo'llanish sohalari",
+    applicationsTitle: "Har kuni ishlatiladigan yuzalar uchun kvars",
+    portfolioEyebrow: "Portfolio",
+    portfolioTitle: "KVARC-S tayyor ishlar",
+    portfolioBody:
+      "Kvars yuzalar bilan bajarilgan real loyihalar: oshxonalar, orollar, stoykalar, vanna xonalari va tijorat zonalari.",
+    portfolioMore: "Barcha portfolioni ochish",
+    portfolioOpen: "Rasmni ochish",
+    portfolioEmpty: "Portfolio rasmlari hali qo'shilmagan.",
+    portfolioPageTitle: "KVARC-S portfolio",
+    pageSize: "Ko'rsatish",
+    pageLabel: "Sahifa",
+    catalogMore: "Katalogni ochish",
+    partnersMore: "Ustalarni ochish",
+    certificatesEyebrow: "Hujjatlar",
+    certificatesTitle: "Sifat sertifikatlari",
+    certificateOpen: "Sertifikatni ochish",
+    close: "Yopish",
+    previous: "Orqaga",
+    next: "Oldinga",
+    zoomIn: "Kattalashtirish",
+    zoomOut: "Kichraytirish"
+  }
+} as const;
+
+type GalleryLabels = {
+  [Key in keyof (typeof sectionCopy)["ru"]]: string;
+};
+
+const navItems = [
+  { key: "catalog", href: "/catalog" },
+  { key: "services", href: "/#services" },
+  { key: "portfolio", href: "/portfolio" },
+  { key: "partners", href: "/partners" },
+  { key: "contacts", href: "/#contacts" }
+] as const;
+
+const applicationItems = [
+  {
+    title: { ru: "Кухонные столешницы", uz: "Oshxona stoleshnitsalari" },
+    body: { ru: "Рабочая зона, остров, фартук и барная стойка.", uz: "Ishchi zona, orol, fartuk va bar stoyka." },
+    image: "/applications/kitchen-countertops.png"
+  },
+  {
+    title: { ru: "Столешницы для ванных", uz: "Vanna stoleshnitsalari" },
+    body: { ru: "Поверхности вокруг раковин и влажных зон.", uz: "Rakowina va nam zonalar atrofidagi yuzalar." },
+    image: "/applications/bathroom-countertops.png"
+  },
+  {
+    title: { ru: "Отделка стен ванных", uz: "Vanna devorlari" },
+    body: { ru: "Аккуратная облицовка без визуального шума.", uz: "Ortiqcha shovqinsiz tartibli qoplama." },
+    image: "/applications/bathroom-walls.png"
+  },
+  {
+    title: { ru: "Облицовка стен", uz: "Devor qoplamasi" },
+    body: { ru: "Акцентные панели для дома и коммерции.", uz: "Uy va biznes uchun aksent panellar." },
+    image: "/applications/wall-cladding.png"
+  },
+  {
+    title: { ru: "Подоконники", uz: "Deraza tokchalari" },
+    body: { ru: "Прочные горизонтальные поверхности.", uz: "Mustahkam gorizontal yuzalar." },
+    image: "/applications/window-sills.png"
+  },
+  {
+    title: { ru: "Лестницы", uz: "Zinapoyalar" },
+    body: { ru: "Ступени и площадки для интенсивного движения.", uz: "Faol harakat uchun zina va maydonchalar." },
+    image: "/applications/stairs.png"
+  },
+  {
+    title: { ru: "Полы внутри помещений", uz: "Ichki pol qoplamalari" },
+    body: { ru: "Плоскости для холлов и проходных зон.", uz: "Xoll va o'tish zonalari uchun yuzalar." },
+    image: "/applications/indoor-floors.png"
+  },
+  {
+    title: { ru: "Столы", uz: "Stollar" },
+    body: { ru: "Обеденные, рабочие и коммерческие столы.", uz: "Ovqatlanish, ish va tijorat stollari." },
+    image: "/applications/tables.png"
+  }
+] as const;
+
+const contact = {
+  phone: siteConfig.phone,
+  phonePerson: siteConfig.phonePerson,
+  telegram: siteConfig.telegram,
+  instagram: siteConfig.instagram,
+  email: siteConfig.email,
+  map: siteConfig.map,
+  mapEmbed: siteConfig.mapEmbed
+};
+
+const heroSlides = [
+  "/fillers/11e2b89d928d1b31ccd1a79ed4b0fb3e.png",
+  "/fillers/AdobeStock_131848850-scaled.jpeg",
+  "/fillers/799f7e87-9f1bc82d31e680788cde82d4df9a9b2c.jpg",
+  "/fillers/b56c7b1e032d8911e2adfd8d751584a8.jpg",
+  "/fillers/ba5667ecc64450739f510e9d3251618f.jpg",
+  "/fillers/Calacatta-2.jpg",
+  "/fillers/f1.jpeg",
+  "/fillers/i_Calacatta_Vagli_Kitchen_College_Grove_Nashville_Residence_SLCVGLXP2_1000x.webp",
+  "/fillers/Neolith-bloggforside.jpg",
+  "/fillers/scale_1200.jpg",
+  "/fillers/su845mu32ecas3mqudi8sxwphkcs6zof.jpg"
+] as const;
+
+function logoSrc(theme: Theme) {
+  return `${theme === "onyx" ? "/logo-light.svg" : "/logo-dark.svg"}?v=${logoVersion}`;
+}
+
+function LogoImage({
+  theme,
+  className = "",
+  priority = false
+}: {
+  theme: Theme;
+  className?: string;
+  priority?: boolean;
+}) {
+  return (
+    <Image
+      src={logoSrc(theme)}
+      alt="KVARC-S"
+      fill
+      unoptimized
+      priority={priority}
+      className={cn("object-contain", className)}
+    />
+  );
+}
+
+export function KvarcsSite({
+  portfolioImages = [],
+  certificateImages = []
+}: KvarcsSiteProps) {
+  const [theme, setTheme] = useState<Theme>("cloud");
+  const [lang, setLang] = useState<Lang>("ru");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 160, damping: 28 });
+
+  useEffect(() => {
+    legacyThemeStorageKeys.forEach((key) => window.localStorage.removeItem(key));
+    const savedTheme = window.localStorage.getItem(themeStorageKey) as Theme | null;
+    const savedLang = window.localStorage.getItem("kvarcs-lang") as Lang | null;
+
+    setTheme(savedTheme === "cloud" || savedTheme === "onyx" ? savedTheme : "cloud");
+    setLang(savedLang === "uz" ? "uz" : "ru");
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(themeStorageKey, theme);
+  }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = lang === "ru" ? "ru" : "uz";
+    window.localStorage.setItem("kvarcs-lang", lang);
+  }, [lang]);
+
+  return (
+    <>
+      <motion.div
+        className="fixed left-0 top-0 z-[90] h-[3px] origin-left bg-[var(--accent)]"
+        style={{ scaleX: progress }}
+      />
+      <Header
+        lang={lang}
+        theme={theme}
+        lightLogoAtTop
+        mobileMenuOpen={mobileMenuOpen}
+        onLanguageChange={setLang}
+        onMenuChange={setMobileMenuOpen}
+        onThemeChange={() => setTheme(theme === "onyx" ? "cloud" : "onyx")}
+      />
+      <main>
+        <Hero lang={lang} />
+        <Applications lang={lang} />
+        <CatalogMarquee lang={lang} />
+        <Services lang={lang} />
+        <PortfolioMarquee lang={lang} images={portfolioImages} />
+        <Certificates lang={lang} images={certificateImages} />
+        <Contacts lang={lang} />
+      </main>
+      <Footer lang={lang} theme={theme} />
+    </>
+  );
+}
+
+export function KvarcsPortfolioPage({ images }: PortfolioPageProps) {
+  const [theme, setTheme] = useState<Theme>("cloud");
+  const [lang, setLang] = useState<Lang>("ru");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 160, damping: 28 });
+
+  useEffect(() => {
+    legacyThemeStorageKeys.forEach((key) => window.localStorage.removeItem(key));
+    const savedTheme = window.localStorage.getItem(themeStorageKey) as Theme | null;
+    const savedLang = window.localStorage.getItem("kvarcs-lang") as Lang | null;
+
+    setTheme(savedTheme === "cloud" || savedTheme === "onyx" ? savedTheme : "cloud");
+    setLang(savedLang === "uz" ? "uz" : "ru");
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(themeStorageKey, theme);
+  }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = lang === "ru" ? "ru" : "uz";
+    window.localStorage.setItem("kvarcs-lang", lang);
+  }, [lang]);
+
+  return (
+    <>
+      <motion.div
+        className="fixed left-0 top-0 z-[90] h-[3px] origin-left bg-[var(--accent)]"
+        style={{ scaleX: progress }}
+      />
+      <Header
+        lang={lang}
+        theme={theme}
+        mobileMenuOpen={mobileMenuOpen}
+        onLanguageChange={setLang}
+        onMenuChange={setMobileMenuOpen}
+        onThemeChange={() => setTheme(theme === "onyx" ? "cloud" : "onyx")}
+      />
+      <main>
+        <Portfolio lang={lang} images={images} />
+      </main>
+      <Footer lang={lang} theme={theme} />
+    </>
+  );
+}
+
+export function KvarcsCatalogPage({ certificateImages = [] }: CatalogPageProps) {
+  const [theme, setTheme] = useState<Theme>("cloud");
+  const [lang, setLang] = useState<Lang>("ru");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 160, damping: 28 });
+
+  useEffect(() => {
+    legacyThemeStorageKeys.forEach((key) => window.localStorage.removeItem(key));
+    const savedTheme = window.localStorage.getItem(themeStorageKey) as Theme | null;
+    const savedLang = window.localStorage.getItem("kvarcs-lang") as Lang | null;
+
+    setTheme(savedTheme === "cloud" || savedTheme === "onyx" ? savedTheme : "cloud");
+    setLang(savedLang === "uz" ? "uz" : "ru");
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(themeStorageKey, theme);
+  }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = lang === "ru" ? "ru" : "uz";
+    window.localStorage.setItem("kvarcs-lang", lang);
+  }, [lang]);
+
+  const requestQuote = useCallback(() => {
+    window.location.href = "/#contacts";
+  }, []);
+
+  return (
+    <>
+      <motion.div
+        className="fixed left-0 top-0 z-[90] h-[3px] origin-left bg-[var(--accent)]"
+        style={{ scaleX: progress }}
+      />
+      <Header
+        lang={lang}
+        theme={theme}
+        mobileMenuOpen={mobileMenuOpen}
+        onLanguageChange={setLang}
+        onMenuChange={setMobileMenuOpen}
+        onThemeChange={() => setTheme(theme === "onyx" ? "cloud" : "onyx")}
+      />
+      <main>
+        <Catalog lang={lang} onRequestQuote={requestQuote} paginated />
+        <Certificates lang={lang} images={certificateImages} />
+      </main>
+      <Footer lang={lang} theme={theme} />
+    </>
+  );
+}
+
+export function KvarcsPartnersPage() {
+  const [theme, setTheme] = useState<Theme>("cloud");
+  const [lang, setLang] = useState<Lang>("ru");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 160, damping: 28 });
+
+  useEffect(() => {
+    legacyThemeStorageKeys.forEach((key) => window.localStorage.removeItem(key));
+    const savedTheme = window.localStorage.getItem(themeStorageKey) as Theme | null;
+    const savedLang = window.localStorage.getItem("kvarcs-lang") as Lang | null;
+
+    setTheme(savedTheme === "cloud" || savedTheme === "onyx" ? savedTheme : "cloud");
+    setLang(savedLang === "uz" ? "uz" : "ru");
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(themeStorageKey, theme);
+  }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = lang === "ru" ? "ru" : "uz";
+    window.localStorage.setItem("kvarcs-lang", lang);
+  }, [lang]);
+
+  return (
+    <>
+      <motion.div
+        className="fixed left-0 top-0 z-[90] h-[3px] origin-left bg-[var(--accent)]"
+        style={{ scaleX: progress }}
+      />
+      <Header
+        lang={lang}
+        theme={theme}
+        mobileMenuOpen={mobileMenuOpen}
+        onLanguageChange={setLang}
+        onMenuChange={setMobileMenuOpen}
+        onThemeChange={() => setTheme(theme === "onyx" ? "cloud" : "onyx")}
+      />
+      <main>
+        <Partners lang={lang} />
+      </main>
+      <Footer lang={lang} theme={theme} />
+    </>
+  );
+}
+
+function Header({
+  lang,
+  theme,
+  lightLogoAtTop = false,
+  mobileMenuOpen,
+  onLanguageChange,
+  onMenuChange,
+  onThemeChange
+}: {
+  lang: Lang;
+  theme: Theme;
+  lightLogoAtTop?: boolean;
+  mobileMenuOpen: boolean;
+  onLanguageChange: (lang: Lang) => void;
+  onMenuChange: (open: boolean) => void;
+  onThemeChange: () => void;
+}) {
+  const [scrolled, setScrolled] = useState(false);
+  const t = translations[lang];
+  const headerLogoTheme = lightLogoAtTop && !scrolled ? "onyx" : theme;
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 24);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <header
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+        scrolled
+          ? "border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] shadow-mineral backdrop-blur-xl"
+          : "bg-transparent"
+      )}
+    >
+      <div className="section-shell flex h-20 items-center justify-between gap-5">
+        <a className="focus-ring relative h-10 w-36 shrink-0" href="/" aria-label="KVARC-S">
+          <LogoImage theme={headerLogoTheme} className="object-left" priority />
+        </a>
+
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
+          {navItems.map((item) => (
+            <a
+              key={item.key}
+              className="focus-ring rounded-full px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-strong)] hover:text-[var(--text-primary)]"
+              href={item.href}
+            >
+              {t.nav[item.key]}
+            </a>
+          ))}
+        </nav>
+
+        <div className="hidden items-center gap-3 lg:flex">
+          <ThemeToggle theme={theme} onClick={onThemeChange} />
+          <LanguageToggle lang={lang} onChange={onLanguageChange} />
+          <MagneticButton href={telHref(contact.phone)} className="px-5 py-3 text-sm">
+            <Phone size={16} />
+            {t.common.call}
+          </MagneticButton>
+          <a
+            className="focus-ring inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            href={contact.telegram}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <MessageCircle size={16} />
+            {t.common.write}
+          </a>
+        </div>
+
+        <button
+          className="focus-ring grid h-12 w-12 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] lg:hidden"
+          type="button"
+          aria-label={mobileMenuOpen ? t.common.close : "Menu"}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => onMenuChange(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {mobileMenuOpen ? (
+          <motion.div
+            className="fixed inset-0 top-20 z-40 bg-[var(--bg-primary)] lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="section-shell flex h-[calc(100vh-80px)] flex-col justify-between py-10">
+              <nav className="grid gap-4">
+                {navItems.map((item, index) => (
+                  <motion.a
+                    key={item.key}
+                    className="display-title focus-ring text-4xl text-[var(--text-primary)]"
+                    href={item.href}
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.06 }}
+                    onClick={() => onMenuChange(false)}
+                  >
+                    {t.nav[item.key]}
+                  </motion.a>
+                ))}
+              </nav>
+              <div className="grid gap-4">
+                <div className="flex items-center gap-3">
+                  <ThemeToggle theme={theme} onClick={onThemeChange} />
+                  <LanguageToggle lang={lang} onChange={onLanguageChange} />
+                </div>
+                <MagneticButton href={telHref(contact.phone)} className="w-full justify-center px-5 py-4">
+                  <Phone size={18} />
+                  {t.common.call}
+                </MagneticButton>
+                <a
+                  className="focus-ring inline-flex w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] px-5 py-4 font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  href={contact.telegram}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MessageCircle size={18} />
+                  {t.common.write}
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </header>
+  );
+}
+
+function ThemeToggle({ theme, onClick }: { theme: Theme; onClick: () => void }) {
+  return (
+    <button
+      className="focus-ring grid h-11 w-11 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] transition hover:border-[var(--border-strong)] hover:shadow-mineral"
+      type="button"
+      aria-label="Toggle theme"
+      onClick={onClick}
+    >
+      {theme === "onyx" ? <Sun size={18} /> : <Moon size={18} />}
+    </button>
+  );
+}
+
+function LanguageToggle({ lang, onChange }: { lang: Lang; onChange: (lang: Lang) => void }) {
+  return (
+    <div
+      className="flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1"
+      role="group"
+      aria-label="Language"
+    >
+      <button
+        className={cn(
+          "focus-ring grid h-9 w-9 place-items-center rounded-full text-lg transition",
+          lang === "ru" ? "scale-105 bg-[var(--accent)] shadow-[var(--shadow-glow)]" : "opacity-65 hover:opacity-100"
+        )}
+        type="button"
+        aria-pressed={lang === "ru"}
+        aria-label={translations.ru.languageName}
+        onClick={() => onChange("ru")}
+      >
+        <span aria-hidden>🇷🇺</span>
+      </button>
+      <button
+        className={cn(
+          "focus-ring grid h-9 w-9 place-items-center rounded-full text-lg transition",
+          lang === "uz" ? "scale-105 bg-[var(--accent)] shadow-[var(--shadow-glow)]" : "opacity-65 hover:opacity-100"
+        )}
+        type="button"
+        aria-pressed={lang === "uz"}
+        aria-label={translations.uz.languageName}
+        onClick={() => onChange("uz")}
+      >
+        <span aria-hidden>🇺🇿</span>
+      </button>
+    </div>
+  );
+}
+
+function MagneticButton({
+  children,
+  className,
+  disabled = false,
+  onClick,
+  href,
+  type = "button"
+}: {
+  children: ReactNode;
+  className?: string;
+  disabled?: boolean;
+  onClick?: () => void;
+  href?: string;
+  type?: "button" | "submit";
+}) {
+  const ref = useRef<HTMLAnchorElement & HTMLButtonElement>(null);
+  const reduceMotion = useReducedMotion();
+  const [transform, setTransform] = useState("translate3d(0,0,0)");
+  const classes = cn(
+    "focus-ring inline-flex items-center gap-2 rounded-full bg-[var(--accent)] font-extrabold text-[var(--bg-primary)] transition hover:bg-[var(--accent-strong)] hover:shadow-[var(--shadow-glow)] disabled:cursor-not-allowed disabled:opacity-60",
+    className
+  );
+
+  const onMouseMove = (event: React.MouseEvent<HTMLElement>) => {
+    if (reduceMotion || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = event.clientX - rect.left - rect.width / 2;
+    const y = event.clientY - rect.top - rect.height / 2;
+    setTransform(`translate3d(${x * 0.12}px, ${y * 0.12}px, 0)`);
+  };
+
+  const onMouseLeave = () => setTransform("translate3d(0,0,0)");
+
+  if (href) {
+    return (
+      <a
+        ref={ref}
+        className={classes}
+        href={href}
+        style={{ transform }}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+      >
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <button
+      ref={ref}
+      className={classes}
+      type={type}
+      style={{ transform }}
+      disabled={disabled}
+      onClick={onClick}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Hero({ lang }: { lang: Lang }) {
+  const t = translations[lang];
+  const reduceMotion = useReducedMotion();
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    const interval = window.setInterval(() => {
+      setActiveSlide((index) => (index + 1) % heroSlides.length);
+    }, 3000);
+    return () => window.clearInterval(interval);
+  }, [reduceMotion]);
+
+  return (
+    <section
+      id="top"
+      className="relative isolate min-h-[94vh] overflow-hidden pt-28"
+      onMouseMove={(event) => {
+        if (reduceMotion) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        setTilt({
+          x: (event.clientX - rect.left) / rect.width - 0.5,
+          y: (event.clientY - rect.top) / rect.height - 0.5
+        });
+      }}
+      onMouseLeave={() => setTilt({ x: 0, y: 0 })}
+    >
+      <div className="absolute inset-0 -z-20">
+        <Image
+          src="/fillers/AdobeStock_131848850-scaled.jpeg"
+          alt=""
+          fill
+          className="grain-mask object-cover opacity-[0.18]"
+          priority
+        />
+      </div>
+      <div className="absolute inset-x-0 bottom-0 -z-10 h-1/2 bg-gradient-to-t from-[var(--bg-primary)] to-transparent" />
+      <div className="section-shell grid min-h-[calc(94vh-112px)] items-center gap-12 pb-10 lg:grid-cols-[minmax(0,0.96fr)_minmax(420px,0.72fr)]">
+        <motion.div
+          initial={{ opacity: 0, y: 36 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <p className="eyebrow mb-5">{t.hero.label}</p>
+          <h1 className="display-title max-w-4xl text-[clamp(2.15rem,4.8vw,5.2rem)] leading-[1.04] text-[var(--text-primary)]">
+            {t.hero.title}
+          </h1>
+          <p className="mt-6 max-w-xl text-base font-semibold leading-7 text-[var(--text-secondary)] md:text-lg">
+            {t.hero.lead}
+          </p>
+          <HeroBenefits items={t.hero.benefits} />
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+            <MagneticButton href={telHref(contact.phone)} className="justify-center px-6 py-4">
+              {t.common.call}
+              <ArrowRight size={18} />
+            </MagneticButton>
+            <a
+              href={contact.telegram}
+              target="_blank"
+              rel="noreferrer"
+              className="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-[var(--border)] px-6 py-4 font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              {t.common.write}
+              <MessageCircle size={18} />
+            </a>
+            <a
+              href="#catalog"
+              className="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-[var(--border)] px-6 py-4 font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            >
+              {t.nav.catalog}
+              <Sparkles size={18} />
+            </a>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="relative mx-auto aspect-[4/5] w-full max-w-[560px]"
+          initial={{ opacity: 0, rotate: 5, y: 60 }}
+          animate={{ opacity: 1, rotate: 0, y: 0 }}
+          transition={{ duration: 1, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div
+            className="surface absolute inset-0 overflow-hidden rounded-stone"
+            style={{
+              transform: `perspective(1100px) rotateX(${tilt.y * -8}deg) rotateY(${tilt.x * 10}deg) translate3d(${tilt.x * 18}px, ${tilt.y * 18}px, 0)`
+            }}
+          >
+            {heroSlides.map((slide, index) => (
+              <motion.div
+                key={slide}
+                className="absolute inset-0"
+                initial={false}
+                animate={{ opacity: activeSlide === index ? 1 : 0 }}
+                transition={{ duration: 0.9, ease: "easeInOut" }}
+              >
+                <Image
+                  src={slide}
+                  alt=""
+                  fill
+                  sizes="(max-width: 1024px) 90vw, 560px"
+                  className="object-cover"
+                  priority={index === 0}
+                />
+              </motion.div>
+            ))}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_8%,rgba(255,255,255,0.25),transparent_26%),linear-gradient(to_top,rgba(0,0,0,0.58),transparent_48%)]" />
+            <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4 text-white">
+              <div>
+                <p className="text-sm uppercase tracking-[0.18em] text-white/65">KVARC-S</p>
+                <p className="display-title mt-1 text-2xl">Quartz surfaces</p>
+              </div>
+              <p className="max-w-32 text-right text-xs font-bold uppercase tracking-[0.14em] text-white/72">
+                Tashkent
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+      <div className="section-shell flex items-center justify-between pb-6 text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+        <span>{t.hero.scroll}</span>
+        <span className="h-px flex-1 bg-[var(--border)] mx-5" />
+        <span>KVARC-S / Tashkent</span>
+      </div>
+    </section>
+  );
+}
+
+function HeroBenefits({ items }: { items: readonly string[] }) {
+  const icons = [Truck, ShieldCheck, Calculator, Clock];
+
+  return (
+    <div className="mt-8 grid overflow-hidden rounded-stone border border-white/80 bg-white text-neutral-950 shadow-[0_22px_70px_rgba(0,0,0,0.3)] sm:grid-cols-2 xl:grid-cols-4">
+      {items.map((item, index) => {
+        const Icon = icons[index] ?? ShieldCheck;
+        return (
+          <div
+            key={item}
+            className="flex min-h-24 items-center gap-4 border-neutral-200 px-5 py-4 sm:border-r last:border-r-0"
+          >
+            <Icon className="h-9 w-9 shrink-0 text-neutral-700" strokeWidth={1.7} />
+            <span className="text-base font-extrabold leading-6 text-neutral-950">{item}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Applications({ lang }: { lang: Lang }) {
+  const copy = sectionCopy[lang];
+
+  return (
+    <section id="applications" className="py-20">
+      <div className="section-shell">
+        <Reveal className="surface overflow-hidden rounded-stone p-5 md:p-7">
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="eyebrow">{copy.applicationsEyebrow}</p>
+              <h2 className="display-title mt-3 text-3xl leading-tight md:text-5xl">
+                {copy.applicationsTitle}
+              </h2>
+            </div>
+          </div>
+
+          <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+            {applicationItems.map((item, index) => (
+              <motion.div
+                key={item.image}
+                className="group flex min-h-40 flex-col items-center justify-between rounded-[8px] border border-[var(--border)] bg-[var(--surface-strong)] p-4 text-center transition duration-300 hover:scale-[1.025] hover:border-[var(--accent)]"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ delay: index * 0.03 }}
+              >
+                <Image
+                  src={item.image}
+                  alt=""
+                  width={96}
+                  height={96}
+                  className="h-20 w-20 object-contain opacity-85 transition duration-300 group-hover:scale-110 group-hover:opacity-100 md:h-24 md:w-24"
+                />
+                <h3 className="mt-4 text-sm font-extrabold leading-5 text-[var(--text-primary)]">
+                  {item.title[lang]}
+                </h3>
+              </motion.div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+function CatalogMarquee({ lang }: { lang: Lang }) {
+  const t = translations[lang];
+  const copy = sectionCopy[lang];
+  const loopStones = [...stones, ...stones];
+
+  return (
+    <section id="catalog" className="overflow-hidden py-20">
+      <div className="section-shell text-center">
+        <Reveal className="mx-auto max-w-4xl">
+          <p className="eyebrow">{t.catalog.eyebrow}</p>
+          <h2 className="display-title mt-4 text-4xl leading-tight md:text-6xl">
+            {t.catalog.title}
+          </h2>
+          <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-[var(--text-secondary)]">
+            {t.catalog.body}
+          </p>
+          <a
+            className="focus-ring mt-6 inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--border)] px-5 text-sm font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            href="/catalog"
+          >
+            {copy.catalogMore}
+          </a>
+        </Reveal>
+      </div>
+
+      <div className="mt-10">
+        <div className="catalog-marquee-track flex w-max gap-3 will-change-transform">
+          {loopStones.map((stone, index) => (
+            <a
+              key={`${stone.slug}-${index}`}
+              className="focus-ring group relative aspect-[5/4] w-[58vw] max-w-[280px] shrink-0 overflow-hidden rounded-[8px] bg-[var(--surface-strong)] shadow-[var(--shadow-soft)] sm:w-[30vw] lg:w-[20vw] xl:w-[15vw]"
+              href="/catalog"
+              aria-label={`${t.common.view} ${stone.name}`}
+            >
+              <Image
+                src={stone.image}
+                alt={stone.name}
+                fill
+                sizes="(max-width: 640px) 58vw, (max-width: 1024px) 30vw, 15vw"
+                className="object-cover transition duration-500 group-hover:scale-[1.045]"
+                quality={48}
+              />
+              <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
+              <span className="absolute bottom-3 left-3 right-3 text-left text-sm font-extrabold uppercase text-white">
+                #{stone.number} {stone.name}
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Catalog({
+  lang,
+  onRequestQuote,
+  paginated = false
+}: {
+  lang: Lang;
+  onRequestQuote: (stone: Stone) => void;
+  paginated?: boolean;
+}) {
+  const t = translations[lang];
+  const [view, setView] = useState<ViewMode>("grid");
+  const [selectedStone, setSelectedStone] = useState<Stone | null>(null);
+  const [cursor, setCursor] = useState({ x: 0, y: 0, active: false, visible: false });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const pageCount = Math.max(1, Math.ceil(stones.length / pageSize));
+  const visibleStones = useMemo(() => {
+    if (!paginated) return stones;
+    const start = (page - 1) * pageSize;
+    return stones.slice(start, start + pageSize);
+  }, [page, pageSize, paginated]);
+
+  return (
+    <section
+      id="catalog"
+      className="relative py-24 pt-28"
+      onMouseMove={(event) =>
+        setCursor((state) => ({
+          ...state,
+          x: event.clientX,
+          y: event.clientY,
+          visible: true
+        }))
+      }
+      onMouseLeave={() => setCursor((state) => ({ ...state, visible: false, active: false }))}
+    >
+      <motion.div
+        className="pointer-events-none fixed z-[80] hidden h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--accent)] bg-[var(--surface)] text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--accent)] shadow-[var(--shadow-glow)] lg:flex"
+        animate={{
+          x: cursor.x,
+          y: cursor.y,
+          scale: cursor.active ? 1 : 0.42,
+          opacity: cursor.visible ? 1 : 0
+        }}
+        transition={{ type: "spring", stiffness: 420, damping: 34 }}
+      >
+        {cursor.active ? t.common.view : ""}
+      </motion.div>
+
+      <div className="section-shell">
+        <Reveal className="mx-auto max-w-4xl text-center">
+            <p className="eyebrow">{t.catalog.eyebrow}</p>
+            <h2 className="display-title mt-4 text-4xl leading-tight md:text-6xl">
+              {t.catalog.title}
+            </h2>
+          <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-[var(--text-secondary)]">
+            {t.catalog.body}
+          </p>
+        </Reveal>
+
+        <div className="mt-10">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-bold text-[var(--text-secondary)]">
+                {paginated ? `${(page - 1) * pageSize + 1}-${Math.min(page * pageSize, stones.length)} / ${stones.length}` : `${stones.length} / ${stones.length}`}
+              </p>
+              <div className="flex rounded-full border border-[var(--border)] bg-[var(--surface)] p-1">
+                <ViewButton active={view === "list"} onClick={() => setView("list")}>
+                  <List size={17} />
+                  {t.catalog.list}
+                </ViewButton>
+                <ViewButton active={view === "grid"} onClick={() => setView("grid")}>
+                  <Grid3X3 size={17} />
+                  {t.catalog.grid}
+                </ViewButton>
+              </div>
+            </div>
+
+          <motion.div
+            layout
+            className={cn(
+              view === "grid"
+                ? "grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5"
+                : "grid grid-cols-1 gap-4"
+            )}
+          >
+            <AnimatePresence mode="popLayout">
+              {visibleStones.map((stone) => (
+                <StoneCard
+                  key={stone.slug}
+                  lang={lang}
+                  stone={stone}
+                  view={view}
+                  onDetails={() => setSelectedStone(stone)}
+                  onHover={(active) => setCursor((state) => ({ ...state, active }))}
+                  onRequestQuote={() => onRequestQuote(stone)}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+          {paginated ? (
+            <PaginationControls
+              className="mt-8"
+              lang={lang}
+              page={page}
+              pageCount={pageCount}
+              pageSize={pageSize}
+              pageSizeOptions={[10, 25, 50, 100]}
+              onPageChange={setPage}
+              onPageSizeChange={(nextSize) => {
+                setPageSize(nextSize);
+                setPage(1);
+              }}
+            />
+          ) : null}
+        </div>
+      </div>
+
+      <StoneDetails
+        lang={lang}
+        stone={selectedStone}
+        onClose={() => setSelectedStone(null)}
+        onRequestQuote={(stone) => {
+          setSelectedStone(null);
+          onRequestQuote(stone);
+        }}
+      />
+    </section>
+  );
+}
+
+function ViewButton({
+  active,
+  children,
+  onClick
+}: {
+  active: boolean;
+  children: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={cn(
+        "focus-ring inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-extrabold transition",
+        active
+          ? "bg-[var(--accent)] text-[var(--bg-primary)]"
+          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+      )}
+      type="button"
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PaginationControls({
+  lang,
+  page,
+  pageCount,
+  pageSize,
+  pageSizeOptions,
+  onPageChange,
+  onPageSizeChange,
+  className
+}: {
+  lang: Lang;
+  page: number;
+  pageCount: number;
+  pageSize: number;
+  pageSizeOptions: number[];
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+  className?: string;
+}) {
+  const copy = sectionCopy[lang];
+  const pages = Array.from({ length: pageCount }, (_, index) => index + 1);
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-3 rounded-stone border border-[var(--border)] bg-[var(--surface)] p-3 sm:flex-row sm:items-center sm:justify-between",
+        className
+      )}
+    >
+      <label className="flex items-center gap-2 text-sm font-extrabold text-[var(--text-secondary)]">
+        {copy.pageSize}
+        <select
+          className="focus-ring h-10 rounded-full border border-[var(--border)] bg-[var(--bg-primary)] px-3 text-[var(--text-primary)] outline-none"
+          value={pageSize}
+          onChange={(event) => onPageSizeChange(Number(event.target.value))}
+        >
+          {pageSizeOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          className="focus-ring min-h-10 rounded-full border border-[var(--border)] px-4 text-sm font-extrabold text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40"
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onPageChange(Math.max(1, page - 1))}
+        >
+          {copy.previous}
+        </button>
+        {pages.map((item) => (
+          <button
+            key={item}
+            className={cn(
+              "focus-ring grid h-10 w-10 place-items-center rounded-full text-sm font-extrabold transition",
+              item === page
+                ? "bg-[var(--accent)] text-[var(--bg-primary)]"
+                : "border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            )}
+            type="button"
+            aria-label={`${copy.pageLabel} ${item}`}
+            onClick={() => onPageChange(item)}
+          >
+            {item}
+          </button>
+        ))}
+        <button
+          className="focus-ring min-h-10 rounded-full border border-[var(--border)] px-4 text-sm font-extrabold text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40"
+          type="button"
+          disabled={page >= pageCount}
+          onClick={() => onPageChange(Math.min(pageCount, page + 1))}
+        >
+          {copy.next}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StoneCard({
+  lang,
+  stone,
+  view,
+  onDetails,
+  onHover,
+  onRequestQuote
+}: {
+  lang: Lang;
+  stone: Stone;
+  view: ViewMode;
+  onDetails: () => void;
+  onHover: (active: boolean) => void;
+  onRequestQuote: () => void;
+}) {
+  const t = translations[lang];
+  const isList = view === "list";
+
+  return (
+    <motion.article
+      layout
+      initial={{ opacity: 0, y: 22, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 16, scale: 0.98 }}
+      className={cn(
+        "surface group overflow-hidden rounded-stone",
+        isList && "grid md:grid-cols-[minmax(140px,180px)_1fr]"
+      )}
+      onMouseEnter={() => onHover(true)}
+      onMouseLeave={() => onHover(false)}
+    >
+      <button
+        className={cn(
+          "focus-ring relative block w-full overflow-hidden bg-[var(--surface-strong)] text-left",
+          isList ? "aspect-[16/10] md:aspect-auto md:min-h-full" : "aspect-[5/4]"
+        )}
+        type="button"
+        onClick={onDetails}
+      >
+        <Image
+          src={stone.image}
+          alt={stone.name}
+          fill
+          sizes={isList ? "(max-width: 768px) 100vw, 180px" : "(max-width: 768px) 50vw, 20vw"}
+          className="object-cover transition duration-700 group-hover:scale-105"
+          quality={64}
+        />
+        <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/52 to-transparent" />
+        <div className="absolute left-2 top-2 rounded-full bg-black/44 px-2 py-1 text-[0.65rem] font-extrabold text-white backdrop-blur">
+          #{stone.number}
+        </div>
+        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2 text-white">
+          <span className="text-[0.66rem] font-extrabold uppercase">
+            {t.common.details}
+          </span>
+          <ArrowRight size={14} />
+        </div>
+      </button>
+
+      <div className="p-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[0.65rem] font-extrabold uppercase tracking-[0.14em] text-[var(--accent)]">
+              KVARC-S #{stone.number}
+            </p>
+            <h3 className="mt-1 text-sm font-extrabold leading-5">{stone.name}</h3>
+          </div>
+          <span className="rounded-full border border-[var(--border)] px-2 py-1 text-[0.65rem] font-bold text-[var(--text-secondary)]">
+            {stone.specs.thicknessMm} мм
+          </span>
+        </div>
+        {isList ? (
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]">
+            {stone.description[lang]}
+          </p>
+        ) : null}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            className="focus-ring inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--border)] px-3 text-xs font-extrabold transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            type="button"
+            onClick={onDetails}
+          >
+            {t.common.details}
+          </button>
+          <button
+            className="focus-ring inline-flex min-h-9 items-center gap-2 rounded-full bg-[var(--accent)] px-3 text-xs font-extrabold text-[var(--bg-primary)] transition hover:bg-[var(--accent-strong)]"
+            type="button"
+            onClick={onRequestQuote}
+          >
+            {t.common.price}
+          </button>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+function SpecPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-stone border border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-primary)_60%,transparent)] p-3">
+      <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+        {label}
+      </p>
+      <p className="mt-1 font-extrabold text-[var(--text-primary)]">{value}</p>
+    </div>
+  );
+}
+
+function StoneDetails({
+  lang,
+  stone,
+  onClose,
+  onRequestQuote
+}: {
+  lang: Lang;
+  stone: Stone | null;
+  onClose: () => void;
+  onRequestQuote: (stone: Stone) => void;
+}) {
+  const t = translations[lang];
+  const reduceMotion = useReducedMotion();
+  const detailImages = useMemo(() => {
+    if (!stone) return [];
+    return stone.detailImages?.length ? stone.detailImages : [stone.image];
+  }, [stone]);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const detailsImage = detailImages[activeImageIndex] ?? "";
+  const detailsImageClassName = detailsImage.endsWith(".png") ? "object-contain p-5" : "object-cover";
+
+  useEffect(() => {
+    if (!stone) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, stone]);
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [stone?.slug]);
+
+  useEffect(() => {
+    if (reduceMotion || detailImages.length < 2) return;
+    const interval = window.setInterval(() => {
+      setActiveImageIndex((index) => (index + 1) % detailImages.length);
+    }, 3000);
+    return () => window.clearInterval(interval);
+  }, [detailImages.length, reduceMotion]);
+
+  return (
+    <AnimatePresence>
+      {stone ? (
+        <motion.div
+          className="fixed inset-0 z-[85] grid place-items-center bg-black/60 p-4 backdrop-blur-md"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label={stone.name}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) onClose();
+          }}
+        >
+          <motion.div
+            className="surface grid max-h-[92vh] w-full max-w-6xl overflow-auto rounded-stone lg:grid-cols-[0.92fr_1fr]"
+            initial={{ opacity: 0, y: 36, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 28, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 220, damping: 26 }}
+          >
+            <div className="relative min-h-[360px] bg-[var(--surface-strong)] lg:min-h-full">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={detailsImage}
+                  className="absolute inset-0"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Image
+                    src={detailsImage}
+                    alt={stone.name}
+                    fill
+                    className={detailsImageClassName}
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    quality={82}
+                    priority
+                  />
+                </motion.div>
+              </AnimatePresence>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
+              <p className="absolute bottom-5 left-5 rounded-full bg-black/44 px-4 py-2 text-sm font-extrabold text-white backdrop-blur">
+                KVARC-S #{stone.number}
+              </p>
+              {detailImages.length > 1 ? (
+                <div className="absolute bottom-5 right-5 flex gap-1.5">
+                  {detailImages.map((image, index) => (
+                    <button
+                      key={image}
+                      className={cn(
+                        "focus-ring h-2.5 rounded-full transition",
+                        activeImageIndex === index ? "w-7 bg-white" : "w-2.5 bg-white/45"
+                      )}
+                      type="button"
+                      aria-label={`${t.common.view} ${index + 1}`}
+                      onClick={() => setActiveImageIndex(index)}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+            <div className="p-6 md:p-8">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="eyebrow">Quartz agglomerate</p>
+                  <h3 className="display-title mt-3 text-4xl leading-tight md:text-5xl">
+                    {stone.name}
+                  </h3>
+                </div>
+                <button
+                  className="focus-ring grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--border)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  type="button"
+                  aria-label={t.common.close}
+                  onClick={onClose}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="mt-6 text-lg leading-8 text-[var(--text-secondary)]">
+                {stone.description[lang]}
+              </p>
+              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+                <SpecPill label={t.specs.width} value={`${stone.specs.widthMm} мм`} />
+                <SpecPill label={t.specs.height} value={`${stone.specs.heightMm} мм`} />
+                <SpecPill label={t.specs.thickness} value={`${stone.specs.thicknessMm} мм`} />
+                <SpecPill label={t.specs.area} value={`${stone.specs.areaM2} м²`} />
+                <SpecPill label={t.specs.surface} value={stone.surface[lang]} />
+              </div>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <MagneticButton
+                  className="justify-center px-6 py-4"
+                  onClick={() => onRequestQuote(stone)}
+                >
+                  {t.common.price}
+                  <Send size={18} />
+                </MagneticButton>
+                <a
+                  className="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-[var(--border)] px-6 py-4 font-extrabold transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  href={telHref(contact.phone)}
+                >
+                  <Phone size={18} />
+                  {contact.phone}
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
+function Services({ lang }: { lang: Lang }) {
+  const t = translations[lang];
+  const icons = [Factory, Ruler, Calculator, Hammer, Truck, PackageCheck];
+
+  return (
+    <section id="services" className="py-24">
+      <div className="section-shell">
+        <Reveal className="mx-auto max-w-3xl text-center">
+          <p className="eyebrow">{t.services.eyebrow}</p>
+          <h2 className="display-title mt-4 text-4xl leading-tight md:text-6xl">
+            {t.services.title}
+          </h2>
+          <p className="mt-5 text-lg leading-8 text-[var(--text-secondary)]">
+            {t.services.body}
+          </p>
+        </Reveal>
+
+        <div className="relative mt-12">
+          <div className="absolute left-6 right-6 top-7 hidden h-px origin-left bg-[var(--border)] md:block">
+            <div className="h-px origin-left bg-[var(--accent)]" />
+          </div>
+          <ol className="grid gap-4 md:grid-cols-6">
+            {t.services.steps.map((step, index) => {
+              const Icon = icons[index] ?? ClipboardCheck;
+              return (
+                <motion.li
+                  key={step}
+                  className="surface relative rounded-stone p-5"
+                  initial={{ opacity: 0, y: 26 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.4 }}
+                  transition={{ delay: index * 0.06 }}
+                >
+                  <div className="grid h-14 w-14 place-items-center rounded-full bg-[var(--accent)] text-[var(--bg-primary)]">
+                    <Icon size={22} />
+                  </div>
+                  <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                    0{index + 1}
+                  </p>
+                  <h3 className="mt-2 font-extrabold leading-6">{step}</h3>
+                </motion.li>
+              );
+            })}
+          </ol>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PortfolioMarquee({ lang, images }: { lang: Lang; images: string[] }) {
+  const copy = sectionCopy[lang];
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const loopImages = images.length > 0 ? [...images, ...images] : [];
+
+  if (images.length === 0) return null;
+
+  return (
+    <section id="portfolio-preview" className="overflow-hidden py-20">
+      <div className="section-shell">
+        <Reveal className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-3xl">
+            <p className="eyebrow">{copy.portfolioEyebrow}</p>
+            <h2 className="display-title mt-4 text-4xl leading-tight md:text-6xl">
+              {copy.portfolioTitle}
+            </h2>
+            <p className="mt-5 text-lg leading-8 text-[var(--text-secondary)]">
+              {copy.portfolioBody}
+            </p>
+          </div>
+          <a
+            className="focus-ring inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--border)] px-5 text-sm font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            href="/portfolio"
+          >
+            {copy.portfolioMore}
+          </a>
+        </Reveal>
+      </div>
+
+      <div className="mt-10">
+        <div className="portfolio-marquee-track flex w-max gap-3 will-change-transform">
+          {loopImages.map((src, index) => {
+            const realIndex = index % images.length;
+            return (
+              <button
+                key={`${src}-${index}`}
+                className="focus-ring group relative aspect-[4/3] w-[58vw] max-w-[320px] shrink-0 overflow-hidden rounded-[8px] bg-[var(--surface-strong)] shadow-[var(--shadow-soft)] sm:w-[34vw] lg:w-[24vw] xl:w-[18vw]"
+                type="button"
+                aria-label={`${copy.portfolioOpen} ${realIndex + 1}`}
+                onClick={() => setActiveIndex(realIndex)}
+              >
+                <Image
+                  src={src}
+                  alt={`KVARC-S portfolio ${realIndex + 1}`}
+                  fill
+                  sizes="(max-width: 640px) 58vw, (max-width: 1024px) 34vw, 18vw"
+                  className="object-cover transition duration-500 group-hover:scale-[1.045]"
+                  quality={48}
+                />
+                <span className="absolute inset-0 bg-black/0 transition group-hover:bg-black/12" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <GalleryLightbox
+        images={images}
+        activeIndex={activeIndex}
+        labels={copy}
+        onClose={() => setActiveIndex(null)}
+        onChange={setActiveIndex}
+      />
+    </section>
+  );
+}
+
+function Portfolio({ lang, images }: { lang: Lang; images: string[] }) {
+  const copy = sectionCopy[lang];
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const defaultPageSize = Math.max(10, Math.ceil(images.length / 10));
+  const pageSizeOptions = Array.from(new Set([defaultPageSize, 10, 25, 50, 100])).sort(
+    (a, b) => a - b
+  );
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
+  const pageCount = Math.max(1, Math.ceil(images.length / pageSize));
+  const visibleImages = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return images.slice(start, start + pageSize);
+  }, [images, page, pageSize]);
+
+  return (
+    <section id="portfolio" className="py-24 pt-28">
+      <div className="section-shell">
+        <Reveal className="mx-auto max-w-4xl text-center">
+          <p className="eyebrow">{copy.portfolioEyebrow}</p>
+          <h2 className="display-title mt-4 text-4xl leading-tight md:text-6xl">
+            {copy.portfolioPageTitle}
+          </h2>
+        </Reveal>
+
+        {images.length > 0 ? (
+          <>
+            <PaginationControls
+              className="mt-8"
+              lang={lang}
+              page={page}
+              pageCount={pageCount}
+              pageSize={pageSize}
+              pageSizeOptions={pageSizeOptions}
+              onPageChange={setPage}
+              onPageSizeChange={(nextSize) => {
+                setPageSize(nextSize);
+                setPage(1);
+                setActiveIndex(null);
+              }}
+            />
+            <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+              {visibleImages.map((src, index) => (
+                <button
+                  key={src}
+                  className="focus-ring group relative aspect-[4/3] overflow-hidden rounded-[6px] bg-[var(--surface-strong)] [contain-intrinsic-size:220px] [content-visibility:auto]"
+                  type="button"
+                  aria-label={`${copy.portfolioOpen} ${(page - 1) * pageSize + index + 1}`}
+                  onClick={() => setActiveIndex(index)}
+                >
+                  <Image
+                    src={src}
+                    alt={`KVARC-S portfolio ${(page - 1) * pageSize + index + 1}`}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                    className="object-cover transition duration-500 group-hover:scale-[1.045]"
+                    quality={52}
+                  />
+                  <span className="absolute inset-0 bg-black/0 transition group-hover:bg-black/10" />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="surface mt-10 rounded-stone p-10 text-center text-[var(--text-secondary)]">
+            {copy.portfolioEmpty}
+          </div>
+        )}
+      </div>
+
+      <GalleryLightbox
+        images={visibleImages}
+        activeIndex={activeIndex}
+        labels={copy}
+        onClose={() => setActiveIndex(null)}
+        onChange={setActiveIndex}
+      />
+    </section>
+  );
+}
+
+function Certificates({ lang, images }: { lang: Lang; images: string[] }) {
+  const copy = sectionCopy[lang];
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  if (images.length === 0) return null;
+
+  return (
+    <section id="certificates" className="py-20">
+      <div className="section-shell">
+        <Reveal className="surface relative overflow-hidden rounded-stone p-5 shadow-[var(--shadow-glow)] md:p-8">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(212,161,92,0.22),transparent_34%),radial-gradient(circle_at_82%_12%,rgba(255,255,255,0.12),transparent_30%)]" />
+          <div className="relative z-10 grid gap-7 lg:grid-cols-[0.58fr_1fr] lg:items-center">
+            <div className="text-center">
+              <p className="eyebrow">{copy.certificatesEyebrow}</p>
+              <h2 className="display-title mt-4 text-4xl leading-tight md:text-5xl">
+                {copy.certificatesTitle}
+              </h2>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {images.map((src, index) => (
+                <button
+                  key={src}
+                  className="focus-ring group relative aspect-[4/5] overflow-hidden rounded-[8px] border border-[var(--border)] bg-white shadow-[0_24px_70px_-36px_rgba(0,0,0,0.55)] transition duration-300 hover:scale-[1.018]"
+                  type="button"
+                  aria-label={`${copy.certificateOpen} ${index + 1}`}
+                  onClick={() => setActiveIndex(index)}
+                >
+                  <Image
+                    src={src}
+                    alt={`KVARC-S certificate ${index + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 90vw, 420px"
+                    className="object-contain p-2"
+                    quality={82}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+      </div>
+
+      <GalleryLightbox
+        images={images}
+        activeIndex={activeIndex}
+        labels={copy}
+        onClose={() => setActiveIndex(null)}
+        onChange={setActiveIndex}
+      />
+    </section>
+  );
+}
+
+function GalleryLightbox({
+  images,
+  activeIndex,
+  labels,
+  onClose,
+  onChange
+}: {
+  images: string[];
+  activeIndex: number | null;
+  labels: GalleryLabels;
+  onClose: () => void;
+  onChange: (index: number) => void;
+}) {
+  const [zoom, setZoom] = useState(1);
+  const [touchState, setTouchState] = useState<{
+    mode: "swipe" | "pinch" | null;
+    startX: number;
+    currentX: number;
+    startDistance: number;
+    startZoom: number;
+  }>({
+    mode: null,
+    startX: 0,
+    currentX: 0,
+    startDistance: 0,
+    startZoom: 1
+  });
+
+  const isOpen = activeIndex !== null && images[activeIndex] !== undefined;
+  const activeSrc = isOpen ? images[activeIndex] : "";
+
+  const goTo = useCallback(
+    (direction: -1 | 1) => {
+      if (activeIndex === null || images.length === 0) return;
+      onChange((activeIndex + direction + images.length) % images.length);
+    },
+    [activeIndex, images.length, onChange]
+  );
+
+  const updateZoom = useCallback((nextZoom: number) => {
+    setZoom(Math.min(3, Math.max(1, nextZoom)));
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setZoom(1);
+  }, [activeIndex, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      if (event.key === "ArrowLeft") goTo(-1);
+      if (event.key === "ArrowRight") goTo(1);
+      if (event.key === "+" || event.key === "=") updateZoom(zoom + 0.25);
+      if (event.key === "-") updateZoom(zoom - 0.25);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [goTo, isOpen, onClose, updateZoom, zoom]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  const distance = (event: TouchEvent<HTMLDivElement>) => {
+    const [first, second] = [event.touches[0], event.touches[1]];
+    if (!first || !second) return 0;
+    return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+  };
+
+  const onTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length === 2) {
+      setTouchState({
+        mode: "pinch",
+        startX: 0,
+        currentX: 0,
+        startDistance: distance(event),
+        startZoom: zoom
+      });
+      return;
+    }
+
+    const touch = event.touches[0];
+    if (!touch) return;
+    setTouchState({
+      mode: "swipe",
+      startX: touch.clientX,
+      currentX: touch.clientX,
+      startDistance: 0,
+      startZoom: zoom
+    });
+  };
+
+  const onTouchMove = (event: TouchEvent<HTMLDivElement>) => {
+    if (touchState.mode === "pinch" && event.touches.length === 2) {
+      event.preventDefault();
+      const nextDistance = distance(event);
+      if (touchState.startDistance > 0) {
+        updateZoom(touchState.startZoom * (nextDistance / touchState.startDistance));
+      }
+      return;
+    }
+
+    const touch = event.touches[0];
+    if (touchState.mode === "swipe" && touch) {
+      setTouchState((state) => ({ ...state, currentX: touch.clientX }));
+    }
+  };
+
+  const onTouchEnd = () => {
+    if (touchState.mode === "swipe" && zoom === 1) {
+      const deltaX = touchState.currentX - touchState.startX;
+      if (Math.abs(deltaX) > 58) {
+        goTo(deltaX > 0 ? -1 : 1);
+      }
+    }
+
+    setTouchState((state) => ({ ...state, mode: null }));
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen ? (
+        <motion.div
+          className="fixed inset-0 z-[120] bg-black/92 text-white"
+          role="dialog"
+          aria-modal="true"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <button
+            className="focus-ring absolute right-4 top-4 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/18"
+            type="button"
+            aria-label={labels.close}
+            onClick={onClose}
+          >
+            <X size={22} />
+          </button>
+
+          <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
+            <span>{(activeIndex ?? 0) + 1}</span>
+            <span className="text-white/45">/</span>
+            <span>{images.length}</span>
+          </div>
+
+          <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/10 p-2 backdrop-blur">
+            <button
+              className="focus-ring grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/14 disabled:opacity-40"
+              type="button"
+              aria-label={labels.zoomOut}
+              disabled={zoom <= 1}
+              onClick={() => updateZoom(zoom - 0.25)}
+            >
+              <ZoomOut size={20} />
+            </button>
+            <span className="min-w-14 text-center text-xs font-extrabold tabular-nums text-white/80">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              className="focus-ring grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/14 disabled:opacity-40"
+              type="button"
+              aria-label={labels.zoomIn}
+              disabled={zoom >= 3}
+              onClick={() => updateZoom(zoom + 0.25)}
+            >
+              <ZoomIn size={20} />
+            </button>
+          </div>
+
+          <button
+            className="focus-ring absolute left-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/18 md:grid"
+            type="button"
+            aria-label={labels.previous}
+            onClick={() => goTo(-1)}
+          >
+            <ChevronLeft size={26} />
+          </button>
+          <button
+            className="focus-ring absolute right-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/18 md:grid"
+            type="button"
+            aria-label={labels.next}
+            onClick={() => goTo(1)}
+          >
+            <ChevronRight size={26} />
+          </button>
+
+          <div
+            className="flex h-full w-full items-center justify-center overflow-hidden px-4 py-20"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            style={{ touchAction: "none" }}
+          >
+            <motion.div
+              key={activeSrc}
+              className="relative h-full max-h-[82vh] w-full max-w-[min(94vw,1280px)]"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.22 }}
+            >
+              <Image
+                src={activeSrc}
+                alt={`KVARC-S gallery ${(activeIndex ?? 0) + 1}`}
+                fill
+                sizes="100vw"
+                className="object-contain transition-transform duration-200"
+                quality={90}
+                priority
+                style={{ transform: `scale(${zoom})` }}
+              />
+            </motion.div>
+          </div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
+function Partners({ lang }: { lang: Lang }) {
+  const t = translations[lang];
+  const [query, setQuery] = useState("");
+  const filtered = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return partners;
+    return partners.filter((partner) =>
+      `${partner.company} ${partner.contact}`.toLowerCase().includes(normalized)
+    );
+  }, [query]);
+
+  return (
+    <section id="partners" className="py-24 pt-28">
+      <div className="section-shell">
+        <Reveal className="mx-auto max-w-4xl text-center">
+            <p className="eyebrow">{t.partners.eyebrow}</p>
+            <h2 className="display-title mt-4 text-4xl leading-tight md:text-6xl">
+              {t.partners.title}
+            </h2>
+          <p className="mx-auto mt-5 max-w-3xl text-lg font-semibold leading-8 text-[var(--text-secondary)]">
+            {t.partners.body}
+          </p>
+        </Reveal>
+
+        <label className="relative mx-auto mt-8 block max-w-xl">
+          <Search
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+            size={18}
+          />
+          <input
+            className="focus-ring h-13 min-h-12 w-full rounded-full border border-[var(--border)] bg-[var(--surface)] pl-11 pr-4 text-sm font-semibold text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
+            value={query}
+            placeholder={t.partners.search}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
+
+        {filtered.length > 0 ? (
+          <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((partner) => (
+              <article
+                key={`${partner.company}-${partner.contact}`}
+                className="surface rounded-stone p-4 transition duration-300 hover:scale-[1.01] hover:shadow-[var(--shadow-glow)]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-lg font-extrabold leading-6">{partner.company}</h3>
+                    <p className="mt-0.5 text-sm font-semibold text-[var(--text-secondary)]">
+                      {partner.contact}
+                    </p>
+                  </div>
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--accent)] text-[var(--bg-primary)]">
+                    <Phone size={16} />
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {partner.phones.map((phone) => (
+                    <a
+                      key={phone}
+                      className="focus-ring rounded-full border border-[var(--border)] px-3 py-2 text-xs font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                      href={telHref(phone)}
+                    >
+                      {phone}
+                    </a>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="surface mt-6 rounded-stone p-10 text-center text-[var(--text-secondary)]">
+            {t.partners.empty}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function Contacts({ lang }: { lang: Lang }) {
+  const t = translations[lang];
+
+  return (
+    <section id="contacts" className="py-24">
+      <div className="section-shell">
+        <Reveal className="mx-auto max-w-4xl text-center">
+            <p className="eyebrow">{t.contacts.eyebrow}</p>
+            <h2 className="display-title mt-4 text-4xl leading-tight md:text-6xl">
+              {t.contacts.title}
+            </h2>
+          <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-[var(--text-secondary)]">
+            {t.contacts.body}
+          </p>
+        </Reveal>
+
+        <div className="contact-strip surface mt-9 grid overflow-hidden rounded-stone md:grid-cols-3">
+          <ContactStripItem icon={<Phone size={22} />} label={t.contacts.phoneLabel}>
+            <a href={telHref(contact.phone)}>
+              {contact.phone}
+              <span className="block text-sm text-[var(--text-secondary)]">{contact.phonePerson}</span>
+            </a>
+          </ContactStripItem>
+          <ContactStripItem icon={<MessageCircle size={22} />} label={t.contacts.telegram}>
+            <a href={contact.telegram} target="_blank" rel="noreferrer">
+              @KVARC_S
+            </a>
+          </ContactStripItem>
+          <ContactStripItem icon={<Clock size={22} />} label={t.contacts.hours}>
+            <span>
+              {t.contacts.weekdays}
+              <span className="block text-sm text-[var(--text-secondary)]">{t.contacts.weekend}</span>
+            </span>
+          </ContactStripItem>
+        </div>
+
+        <div className="mt-10 grid gap-8 lg:grid-cols-[0.82fr_1fr]">
+          <Reveal className="grid content-start gap-4">
+            <ContactCard icon={<Phone size={22} />} label={t.contacts.phoneLabel}>
+              <a href={telHref(contact.phone)}>
+                {contact.phone}
+                <span className="font-semibold text-[var(--text-secondary)]"> — {contact.phonePerson}</span>
+              </a>
+            </ContactCard>
+            <ContactCard icon={<Mail size={22} />} label={t.contacts.email}>
+              <a href={`mailto:${contact.email}`}>{contact.email}</a>
+            </ContactCard>
+            <ContactCard icon={<MapPin size={22} />} label="Офис">
+              <span>{t.contacts.address}</span>
+              <a
+                className="mt-2 inline-flex text-sm font-extrabold text-[var(--accent)]"
+                href={contact.map}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t.common.openMap}
+              </a>
+            </ContactCard>
+            <ContactCard icon={<Clock size={22} />} label={t.contacts.hours}>
+              <span>
+                {t.contacts.weekdays}
+                <span className="block">{t.contacts.weekend}</span>
+              </span>
+            </ContactCard>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <a
+                className="focus-ring inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-red-500 px-5 font-extrabold text-white shadow-[0_22px_60px_-30px_rgba(239,68,68,0.95)] transition hover:bg-red-600"
+                href={contact.telegram}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <MessageCircle size={19} />
+                Telegram
+              </a>
+              <a
+                className="focus-ring inline-flex min-h-14 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                href={contact.instagram}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Instagram size={19} />
+                Instagram
+              </a>
+            </div>
+          </Reveal>
+
+          <Reveal className="surface overflow-hidden rounded-stone shadow-[var(--shadow-soft)]">
+            <div className="relative min-h-[520px]">
+              <iframe
+                className="h-full min-h-[520px] w-full border-0"
+                src={contact.mapEmbed}
+                title="KVARC-S на Яндекс.Картах"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <a
+                className="focus-ring absolute bottom-4 left-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-white px-4 text-sm font-extrabold text-neutral-900 shadow-[0_14px_45px_-24px_rgba(0,0,0,0.8)]"
+                href={contact.map}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <MapPin size={17} className="text-red-500" />
+                {t.common.openMap}
+              </a>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ContactStripItem({
+  icon,
+  label,
+  children
+}: {
+  icon: ReactNode;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="contact-strip-item relative grid grid-cols-[56px_1fr] gap-4 p-5 md:p-6">
+      <div className="grid h-12 w-12 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)]">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+          {label}
+        </p>
+        <div className="mt-1 break-words text-lg font-extrabold leading-7 text-[var(--text-primary)] [&_a:hover]:text-[var(--accent)]">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ContactCard({
+  icon,
+  label,
+  children
+}: {
+  icon: ReactNode;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="surface rounded-stone p-4">
+      <div className="grid grid-cols-[44px_1fr] gap-3">
+        <div className="grid h-11 w-11 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)]">
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            {label}
+          </p>
+          <div className="mt-1 break-words text-base font-extrabold text-[var(--text-primary)] [&_a:hover]:text-[var(--accent)]">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Footer({ lang }: { lang: Lang; theme: Theme }) {
+  const t = translations[lang];
+
+  return (
+    <footer className="border-y border-[var(--border)] bg-[var(--surface)] py-14">
+      <div className="section-shell grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <a
+            className="focus-ring display-title text-3xl font-extrabold text-red-500"
+            href="/"
+            aria-label="KVARC-S"
+          >
+            KVARC-S
+          </a>
+          <p className="mt-5 max-w-xs text-base font-semibold leading-7 text-[var(--text-secondary)]">
+            Продажа кварцевого агломерата
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            {t.contacts.phoneLabel}
+          </p>
+          <a className="mt-3 block text-lg font-extrabold hover:text-[var(--accent)]" href={telHref(contact.phone)}>
+            {contact.phone}
+          </a>
+          <a className="mt-2 block text-lg font-extrabold hover:text-[var(--accent)]" href={`mailto:${contact.email}`}>
+            {contact.email}
+          </a>
+        </div>
+
+        <div>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            Офис
+          </p>
+          <p className="mt-3 text-lg font-semibold leading-7 text-[var(--text-secondary)]">
+            {t.contacts.address}
+          </p>
+          <p className="mt-3 text-base font-semibold leading-7 text-[var(--text-secondary)]">
+            {t.contacts.weekdays}
+            <br />
+            {t.contacts.weekend}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+            Соцсети
+          </p>
+          <div className="mt-4 flex gap-3">
+            <a
+              className="focus-ring grid h-14 w-14 place-items-center rounded-full border border-[var(--border)] text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              href={contact.telegram}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Telegram"
+            >
+              <MessageCircle size={22} />
+            </a>
+            <a
+              className="focus-ring grid h-14 w-14 place-items-center rounded-full border border-[var(--border)] text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              href={contact.instagram}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram"
+            >
+              <Instagram size={22} />
+            </a>
+          </div>
+        </div>
+      </div>
+      <div className="section-shell mt-10 flex flex-col gap-2 border-t border-[var(--border)] pt-5 text-xs font-extrabold uppercase tracking-[0.14em] text-[var(--text-muted)] md:flex-row md:items-center md:justify-between">
+        <p>© {new Date().getFullYear()} KVARC-S · основано в 2007 году</p>
+        <p>kvarcs.uz</p>
+      </div>
+    </footer>
+  );
+}
+
+function Reveal({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <motion.div
+      className={className}
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.22 }}
+      transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}

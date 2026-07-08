@@ -71,7 +71,11 @@ type CatalogPageProps = {
 
 const themeStorageKey = "kvarcs-theme-v3";
 const legacyThemeStorageKeys = ["kvarcs-theme", "kvarcs-theme-v2"] as const;
-const logoVersion = "20260708-logo-context";
+const logoVersion = "20260709-theme-locked";
+const logoSourceByTheme: Readonly<Record<Theme, string>> = Object.freeze({
+  cloud: "/logo-dark.svg",
+  onyx: "/logo-light.svg"
+});
 
 const sectionCopy = {
   ru: {
@@ -204,7 +208,7 @@ const heroSlides = [
 ] as const;
 
 function logoSrc(theme: Theme) {
-  return `${theme === "onyx" ? "/logo-light.svg" : "/logo-dark.svg"}?v=${logoVersion}`;
+  return `${logoSourceByTheme[theme]}?v=${logoVersion}`;
 }
 
 function LogoImage({
@@ -266,7 +270,6 @@ export function KvarcsSite({
       <Header
         lang={lang}
         theme={theme}
-        lightLogoAtTop
         mobileMenuOpen={mobileMenuOpen}
         onLanguageChange={setLang}
         onMenuChange={setMobileMenuOpen}
@@ -438,7 +441,6 @@ export function KvarcsPartnersPage() {
 function Header({
   lang,
   theme,
-  lightLogoAtTop = false,
   mobileMenuOpen,
   onLanguageChange,
   onMenuChange,
@@ -446,7 +448,6 @@ function Header({
 }: {
   lang: Lang;
   theme: Theme;
-  lightLogoAtTop?: boolean;
   mobileMenuOpen: boolean;
   onLanguageChange: (lang: Lang) => void;
   onMenuChange: (open: boolean) => void;
@@ -454,7 +455,6 @@ function Header({
 }) {
   const [scrolled, setScrolled] = useState(false);
   const t = translations[lang];
-  const headerLogoTheme = lightLogoAtTop && !scrolled ? "onyx" : theme;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 24);
@@ -474,7 +474,7 @@ function Header({
     >
       <div className="section-shell flex h-20 items-center justify-between gap-5">
         <a className="focus-ring relative h-10 w-36 shrink-0" href="/" aria-label="KVARC-S">
-          <LogoImage theme={headerLogoTheme} className="object-left" priority />
+          <LogoImage theme={theme} className="object-left" priority />
         </a>
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
@@ -684,6 +684,7 @@ function MagneticButton({
 function Hero({ lang }: { lang: Lang }) {
   const t = translations[lang];
   const reduceMotion = useReducedMotion();
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
@@ -697,16 +698,25 @@ function Hero({ lang }: { lang: Lang }) {
   return (
     <section
       id="top"
-      className="relative isolate min-h-[92vh] overflow-hidden pt-28"
+      className="relative isolate min-h-[94vh] overflow-hidden pt-28"
+      onMouseMove={(event) => {
+        if (reduceMotion) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        setTilt({
+          x: (event.clientX - rect.left) / rect.width - 0.5,
+          y: (event.clientY - rect.top) / rect.height - 0.5
+        });
+      }}
+      onMouseLeave={() => setTilt({ x: 0, y: 0 })}
     >
       <div className="absolute inset-0 -z-20">
         {heroSlides.map((slide, index) => (
-          <motion.div
+          <div
             key={slide}
-            className="absolute inset-0"
-            initial={false}
-            animate={{ opacity: activeSlide === index ? 1 : 0 }}
-            transition={{ duration: 1.1, ease: "easeInOut" }}
+            className={cn(
+              "absolute inset-0 opacity-0 transition-opacity duration-[1200ms] ease-in-out",
+              activeSlide === index && "opacity-100"
+            )}
           >
             <Image
               src={slide}
@@ -716,28 +726,28 @@ function Hero({ lang }: { lang: Lang }) {
               className="grain-mask object-cover"
               priority={index === 0}
             />
-          </motion.div>
+          </div>
         ))}
       </div>
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,color-mix(in_srgb,var(--bg-primary)_92%,transparent)_0%,color-mix(in_srgb,var(--bg-primary)_76%,transparent)_46%,color-mix(in_srgb,var(--bg-primary)_36%,transparent)_100%)]" />
-      <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-t from-[var(--bg-primary)] to-transparent" />
+      <div className="absolute inset-0 -z-10" style={{ background: "var(--hero-scrim)" }} />
+      <div className="absolute inset-x-0 bottom-0 -z-10 h-1/2 bg-gradient-to-t from-[var(--bg-primary)] to-transparent" />
 
-      <div className="section-shell flex min-h-[calc(92vh-112px)] items-center pb-10">
+      <div className="section-shell grid min-h-[calc(94vh-112px)] items-center gap-12 pb-10 lg:grid-cols-[minmax(0,0.94fr)_minmax(390px,0.68fr)]">
         <motion.div
-          className="max-w-[850px] rounded-stone border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_64%,transparent)] p-6 shadow-[0_28px_100px_-52px_rgba(0,0,0,0.52)] backdrop-blur-2xl md:p-9"
+          className="max-w-[820px] rounded-stone border border-[var(--border)] bg-[var(--hero-panel)] p-6 shadow-[0_28px_100px_-56px_rgba(0,0,0,0.5)] backdrop-blur-xl md:p-8"
           initial={{ opacity: 0, y: 36 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
         >
           <p className="eyebrow mb-5">{t.hero.label}</p>
-          <h1 className="display-title max-w-3xl text-[clamp(2.35rem,4.5vw,4.95rem)] leading-[0.98] text-[var(--text-primary)]">
+          <h1 className="display-title max-w-3xl text-[clamp(2.05rem,3.75vw,4.35rem)] leading-[1.02] text-[var(--text-primary)]">
             {t.hero.title}
           </h1>
           <p className="mt-6 max-w-2xl text-base font-semibold leading-7 text-[var(--text-secondary)] md:text-lg">
             {t.hero.lead}
           </p>
           <HeroBenefits items={t.hero.benefits} />
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+          <div className="mt-9 flex flex-col gap-4 sm:flex-row">
             <MagneticButton href={telHref(contact.phone)} className="justify-center px-6 py-4">
               {t.common.call}
               <ArrowRight size={18} />
@@ -758,6 +768,49 @@ function Hero({ lang }: { lang: Lang }) {
               {t.nav.catalog}
               <Sparkles size={18} />
             </a>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="relative mx-auto aspect-[4/5] w-full max-w-[520px]"
+          initial={{ opacity: 0, rotate: 4, y: 52 }}
+          animate={{ opacity: 1, rotate: 0, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div
+            className="surface absolute inset-0 overflow-hidden rounded-stone"
+            style={{
+              transform: `perspective(1100px) rotateX(${tilt.y * -6}deg) rotateY(${tilt.x * 8}deg) translate3d(${tilt.x * 12}px, ${tilt.y * 12}px, 0)`
+            }}
+          >
+            {heroSlides.map((slide, index) => (
+              <div
+                key={slide}
+                className={cn(
+                  "absolute inset-0 opacity-0 transition-opacity duration-[1200ms] ease-in-out",
+                  activeSlide === index && "opacity-100"
+                )}
+              >
+                <Image
+                  src={slide}
+                  alt=""
+                  fill
+                  sizes="(max-width: 1024px) 90vw, 520px"
+                  className="object-cover"
+                  priority={index === 0}
+                />
+              </div>
+            ))}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_8%,rgba(255,255,255,0.24),transparent_26%),linear-gradient(to_top,rgba(0,0,0,0.58),transparent_48%)]" />
+            <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between gap-4 text-white">
+              <div>
+                <p className="text-sm uppercase tracking-[0.18em] text-white/65">KVARC-S</p>
+                <p className="display-title mt-1 text-2xl">Quartz surfaces</p>
+              </div>
+              <p className="max-w-32 text-right text-xs font-bold uppercase tracking-[0.14em] text-white/72">
+                Tashkent
+              </p>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -813,7 +866,7 @@ function Applications({ lang }: { lang: Lang }) {
             {applicationItems.map((item, index) => (
               <motion.div
                 key={item.image}
-                className="group flex min-h-40 flex-col items-center justify-between rounded-[8px] border border-white/10 bg-neutral-950 p-4 text-center text-white shadow-[0_20px_70px_-44px_rgba(0,0,0,0.75)] transition duration-300 hover:scale-[1.025] hover:border-[var(--accent)]"
+                className="group flex min-h-40 flex-col items-center justify-between rounded-[8px] border border-[var(--application-card-border)] bg-[var(--application-card-bg)] p-4 text-center text-[var(--application-card-text)] shadow-[0_20px_70px_-44px_rgba(0,0,0,0.75)] transition duration-300 hover:scale-[1.025] hover:border-[var(--accent)]"
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.25 }}
@@ -826,7 +879,7 @@ function Applications({ lang }: { lang: Lang }) {
                   height={96}
                   className="h-20 w-20 object-contain opacity-90 transition duration-300 group-hover:scale-110 group-hover:opacity-100 md:h-24 md:w-24"
                 />
-                <h3 className="mt-4 text-sm font-extrabold leading-5 text-white">
+                <h3 className="mt-4 text-sm font-extrabold leading-5 text-[var(--application-card-text)]">
                   {item.title[lang]}
                 </h3>
               </motion.div>

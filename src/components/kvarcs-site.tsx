@@ -44,6 +44,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type MouseEvent,
   type TouchEvent
 } from "react";
 import { stones, type Stone } from "@/lib/catalog-data";
@@ -189,7 +190,8 @@ const applicationItems = [
 const contact = {
   phone: siteConfig.phone,
   phonePerson: siteConfig.phonePerson,
-  telegram: siteConfig.telegram,
+  telegramChat: siteConfig.telegramChat,
+  telegramChannel: siteConfig.telegramChannel,
   instagram: siteConfig.instagram,
   email: siteConfig.email,
   map: siteConfig.map,
@@ -481,6 +483,12 @@ function Header({
   onThemeChange: () => void;
 }) {
   const [scrolled, setScrolled] = useState(false);
+  const [menuTransition, setMenuTransition] = useState<{
+    href: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const reduceMotion = useReducedMotion();
   const t = translations[lang];
 
   useEffect(() => {
@@ -499,10 +507,32 @@ function Header({
     };
   }, [mobileMenuOpen]);
 
+  const openMobileLink = (href: string, event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+
+    if (reduceMotion) {
+      onMenuChange(false);
+      window.location.href = href;
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    setMenuTransition({
+      href,
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2
+    });
+
+    window.setTimeout(() => {
+      onMenuChange(false);
+      window.location.href = href;
+    }, 360);
+  };
+
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+        "fixed inset-x-0 top-0 z-[90] transition-all duration-300",
         scrolled
           ? "border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] shadow-mineral backdrop-blur-xl"
           : "bg-transparent"
@@ -537,7 +567,7 @@ function Header({
           </MagneticButton>
           <a
             className="focus-ring inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-            href={contact.telegram}
+            href={contact.telegramChat}
             target="_blank"
             rel="noreferrer"
           >
@@ -560,7 +590,7 @@ function Header({
       <AnimatePresence>
         {mobileMenuOpen ? (
           <motion.div
-            className="fixed inset-0 z-[100] overflow-y-auto bg-[var(--bg-primary)] text-[var(--text-primary)] lg:hidden"
+            className="fixed inset-0 z-[120] overflow-y-auto bg-[var(--bg-primary)] text-[var(--text-primary)] lg:hidden"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -581,17 +611,18 @@ function Header({
                 </button>
               </div>
 
-              <nav className="mt-8 grid gap-2">
+              <nav className="mt-7 divide-y divide-[var(--border)] overflow-hidden rounded-stone border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_72%,transparent)] shadow-[0_24px_80px_-50px_rgba(0,0,0,0.78)] backdrop-blur-xl">
                 {navItems.map((item, index) => (
                   <motion.a
                     key={item.key}
-                    className="display-title focus-ring rounded-stone border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[clamp(1.45rem,9vw,2.55rem)] leading-[1.05] text-[var(--text-primary)] shadow-[0_18px_48px_-38px_rgba(0,0,0,0.6)]"
+                    className="display-title focus-ring group relative overflow-hidden px-5 py-4 text-[clamp(1.15rem,6.4vw,1.7rem)] leading-none text-[var(--text-primary)] transition hover:bg-[var(--surface-strong)]"
                     href={item.href}
                     initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.06 }}
-                    onClick={() => onMenuChange(false)}
+                    onClick={(event) => openMobileLink(item.href, event)}
                   >
+                    <span className="absolute inset-y-3 left-0 w-1 origin-y scale-y-0 rounded-r-full bg-[var(--accent)] transition group-hover:scale-y-100" />
                     {t.nav[item.key]}
                   </motion.a>
                 ))}
@@ -607,7 +638,7 @@ function Header({
                 </MagneticButton>
                 <a
                   className="focus-ring inline-flex w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] px-5 py-4 font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                  href={contact.telegram}
+                  href={contact.telegramChat}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -617,6 +648,23 @@ function Header({
               </div>
             </div>
           </motion.div>
+        ) : null}
+      </AnimatePresence>
+      <AnimatePresence>
+        {menuTransition ? (
+          <motion.div
+            key={menuTransition.href}
+            className="pointer-events-none fixed z-[140] h-12 w-12 rounded-full bg-[radial-gradient(circle_at_center,var(--accent)_0%,var(--surface)_58%,var(--bg-primary)_100%)] shadow-[0_0_80px_rgba(212,161,92,0.34)] lg:hidden"
+            style={{
+              left: menuTransition.x - 24,
+              top: menuTransition.y - 24
+            }}
+            initial={{ scale: 0, opacity: 0.98 }}
+            animate={{ scale: 58, opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+            onAnimationComplete={() => setMenuTransition(null)}
+          />
         ) : null}
       </AnimatePresence>
     </header>
@@ -637,10 +685,7 @@ function ThemeToggle({ theme, onClick }: { theme: Theme; onClick: () => void }) 
 }
 
 function LanguageToggle({ lang, onChange }: { lang: Lang; onChange: (lang: Lang) => void }) {
-  const options: Array<{ value: Lang; label: string }> = [
-    { value: "ru", label: "RU" },
-    { value: "uz", label: "UZ" }
-  ];
+  const options: Lang[] = ["ru", "uz"];
 
   return (
     <div
@@ -656,27 +701,26 @@ function LanguageToggle({ lang, onChange }: { lang: Lang; onChange: (lang: Lang)
       />
       {options.map((option) => (
         <button
-          key={option.value}
+          key={option}
           className={cn(
-            "focus-ring relative z-10 inline-flex h-10 w-[58px] items-center justify-center gap-1.5 rounded-full text-xs font-extrabold transition",
-            lang === option.value
+            "focus-ring relative z-10 grid h-10 w-11 place-items-center rounded-full transition",
+            lang === option
               ? "text-[var(--bg-primary)]"
               : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           )}
           type="button"
-          aria-pressed={lang === option.value}
-          aria-label={translations[option.value].languageName}
-          onClick={() => onChange(option.value)}
+          aria-pressed={lang === option}
+          aria-label={translations[option].languageName}
+          onClick={() => onChange(option)}
         >
           <Image
-            src={languageFlagSources[option.value]}
+            src={languageFlagSources[option]}
             alt=""
-            width={22}
-            height={22}
+            width={26}
+            height={26}
             unoptimized
-            className="h-5 w-5 shrink-0 rounded-full object-contain"
+            className="h-6 w-6 shrink-0 rounded-full object-contain"
           />
-          <span>{option.label}</span>
         </button>
       ))}
     </div>
@@ -819,7 +863,7 @@ function Hero({ lang }: { lang: Lang }) {
               {t.common.call}
             </MagneticButton>
             <a
-              href={contact.telegram}
+              href={contact.telegramChat}
               target="_blank"
               rel="noreferrer"
               className="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-[var(--border)] px-6 py-4 font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
@@ -970,9 +1014,6 @@ function CatalogMarquee({ lang }: { lang: Lang }) {
           <h2 className="display-title mt-4 text-4xl leading-tight md:text-6xl">
             {t.catalog.title}
           </h2>
-          <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-[var(--text-secondary)]">
-            {t.catalog.body}
-          </p>
           <a
             className="focus-ring mt-6 inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--border)] px-5 text-sm font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
             href="/catalog"
@@ -987,7 +1028,7 @@ function CatalogMarquee({ lang }: { lang: Lang }) {
           {loopStones.map((stone, index) => (
             <a
               key={`${stone.slug}-${index}`}
-              className="focus-ring group relative aspect-[5/4] w-[58vw] max-w-[280px] shrink-0 overflow-hidden rounded-[8px] bg-[var(--surface-strong)] shadow-[var(--shadow-soft)] sm:w-[30vw] lg:w-[20vw] xl:w-[15vw]"
+              className="focus-ring group relative aspect-[5/4] w-[58vw] max-w-[280px] shrink-0 overflow-hidden rounded-[8px] bg-white shadow-[var(--shadow-soft)] sm:w-[30vw] lg:w-[20vw] xl:w-[15vw]"
               href="/catalog"
               aria-label={`${t.common.view} ${stone.name}`}
             >
@@ -996,7 +1037,7 @@ function CatalogMarquee({ lang }: { lang: Lang }) {
                 alt={stone.name}
                 fill
                 sizes="(max-width: 640px) 58vw, (max-width: 1024px) 30vw, 15vw"
-                className="object-cover transition duration-500 group-hover:scale-[1.045]"
+                className="object-contain transition duration-500 group-hover:scale-[1.015]"
                 quality={48}
               />
               <span className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
@@ -1066,9 +1107,6 @@ function Catalog({
             <h2 className="display-title mt-4 text-4xl leading-tight md:text-6xl">
               {t.catalog.title}
             </h2>
-          <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-[var(--text-secondary)]">
-            {t.catalog.body}
-          </p>
         </Reveal>
 
         <div className="mt-10">
@@ -1317,7 +1355,7 @@ function StoneCard({
     >
       <button
         className={cn(
-          "focus-ring relative block w-full overflow-hidden bg-[var(--surface-strong)] text-left",
+          "focus-ring relative block w-full overflow-hidden bg-white text-left",
           isList ? "aspect-[16/10] md:aspect-auto md:min-h-full" : "aspect-[5/4]"
         )}
         type="button"
@@ -1328,7 +1366,7 @@ function StoneCard({
           alt={stone.name}
           fill
           sizes={isList ? "(max-width: 768px) 100vw, 180px" : "(max-width: 768px) 50vw, 20vw"}
-          className="object-cover transition duration-700 group-hover:scale-105"
+          className="object-contain transition duration-700 group-hover:scale-[1.015]"
           quality={64}
         />
         <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/52 to-transparent" />
@@ -1567,28 +1605,31 @@ function Services({ lang }: { lang: Lang }) {
         </Reveal>
 
         <div className="relative mt-12">
-          <div className="absolute left-6 right-6 top-7 hidden h-px origin-left bg-[var(--border)] md:block">
-            <div className="h-px origin-left bg-[var(--accent)]" />
-          </div>
-          <ol className="grid gap-4 md:grid-cols-6">
+          <div className="absolute left-8 right-8 top-1/2 hidden h-px -translate-y-1/2 bg-[linear-gradient(90deg,transparent,var(--accent),transparent)] opacity-45 md:block" />
+          <div className="absolute left-8 right-8 top-1/2 hidden h-px -translate-y-1/2 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)] blur-sm md:block" />
+          <ol className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
             {t.services.steps.map((step, index) => {
               const Icon = icons[index] ?? ClipboardCheck;
               return (
                 <motion.li
                   key={step}
-                  className="surface relative rounded-stone p-5"
+                  className="surface group relative flex min-h-[210px] flex-col items-center justify-center overflow-hidden rounded-stone p-5 text-center transition duration-300 hover:-translate-y-1 hover:border-[var(--accent)] hover:shadow-[var(--shadow-glow)]"
                   initial={{ opacity: 0, y: 26 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.4 }}
-                  transition={{ delay: index * 0.06 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <div className="grid h-14 w-14 place-items-center rounded-full bg-[var(--accent)] text-[var(--bg-primary)]">
-                    <Icon size={22} />
+                  <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(212,161,92,0.22),transparent_38%),linear-gradient(135deg,transparent,rgba(255,255,255,0.04))] opacity-70 transition group-hover:opacity-100" />
+                  <span className="pointer-events-none absolute inset-x-6 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--accent),transparent)] opacity-70" />
+                  <div className="relative z-10 grid h-16 w-16 place-items-center rounded-full bg-[var(--accent)] text-[var(--bg-primary)] shadow-[0_18px_48px_-24px_rgba(212,161,92,0.9)] transition group-hover:scale-105">
+                    <Icon size={24} strokeWidth={1.8} />
                   </div>
-                  <p className="mt-5 text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--text-muted)]">
+                  <p className="relative z-10 mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-muted)]">
                     0{index + 1}
                   </p>
-                  <h3 className="mt-2 font-extrabold leading-6">{step}</h3>
+                  <h3 className="relative z-10 mt-2 max-w-[14rem] text-center text-[clamp(1.02rem,1.5vw,1.3rem)] font-extrabold leading-6 text-[var(--text-primary)]">
+                    {step}
+                  </h3>
                 </motion.li>
               );
             })}
@@ -2207,7 +2248,7 @@ function Contacts({ lang }: { lang: Lang }) {
             <div className="grid gap-3 sm:grid-cols-2">
               <a
                 className="focus-ring inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-red-500 px-5 font-extrabold text-white shadow-[0_22px_60px_-30px_rgba(239,68,68,0.95)] transition hover:bg-red-600"
-                href={contact.telegram}
+                href={contact.telegramChannel}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -2323,7 +2364,7 @@ function Footer({ lang, theme }: { lang: Lang; theme: Theme }) {
           <div className="mt-4 flex gap-3">
             <a
               className="focus-ring grid h-14 w-14 place-items-center rounded-full border border-[var(--border)] text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-              href={contact.telegram}
+              href={contact.telegramChannel}
               target="_blank"
               rel="noreferrer"
               aria-label="Telegram"

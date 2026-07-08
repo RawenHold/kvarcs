@@ -20,6 +20,8 @@ export const siteConfig = {
   phone: "+998 90 005 59 55",
   phonePerson: "Михаил",
   telegram: "https://t.me/kvarcS",
+  telegramChat: "https://t.me/KVARC_S",
+  telegramChannel: "https://t.me/kvarcS",
   instagram: "https://www.instagram.com/kvarcs.uz",
   email: "kvarcs.uz@yandex.ru",
   foundedYear: "2007",

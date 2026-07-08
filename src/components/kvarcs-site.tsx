@@ -23,7 +23,6 @@ import {
   Mail,
   MapPin,
   Menu,
-  MessageCircle,
   Moon,
   PackageCheck,
   Phone,
@@ -75,6 +74,10 @@ const logoVersion = "20260709-theme-locked";
 const logoSourceByTheme: Readonly<Record<Theme, string>> = Object.freeze({
   cloud: "/logo-dark.svg",
   onyx: "/logo-light.svg"
+});
+const languageFlagSources: Readonly<Record<Lang, string>> = Object.freeze({
+  ru: "/lang-ru.svg",
+  uz: "/lang-uz.svg"
 });
 
 const sectionCopy = {
@@ -229,6 +232,30 @@ function LogoImage({
       priority={priority}
       className={cn("object-contain", className)}
     />
+  );
+}
+
+function TelegramIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="shrink-0"
+    >
+      <path
+        d="M20.86 4.48 3.84 11.1c-1.16.46-1.15 1.12-.2 1.41l4.36 1.36 1.68 5.18c.22.61.11.86.75.86.49 0 .71-.23.99-.5l2.38-2.33 4.94 3.64c.91.5 1.57.24 1.8-.85l3.25-15.33c.33-1.34-.51-1.94-1.39-1.56Z"
+        fill="currentColor"
+      />
+      <path
+        d="m8.66 13.55 10.13-6.39c.48-.29.92-.13.56.2l-8.67 7.83-.34 3.64-1.68-5.28Z"
+        fill="var(--bg-primary)"
+        opacity="0.42"
+      />
+    </svg>
   );
 }
 
@@ -463,6 +490,15 @@ function Header({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <header
       className={cn(
@@ -477,11 +513,14 @@ function Header({
           <LogoImage theme={theme} className="object-left" priority />
         </a>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
+        <nav
+          className="hidden items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--header-nav-bg)] p-1 text-[var(--header-nav-text)] shadow-[0_18px_56px_-36px_rgba(0,0,0,0.68)] backdrop-blur-xl lg:flex"
+          aria-label="Primary navigation"
+        >
           {navItems.map((item) => (
             <a
               key={item.key}
-              className="focus-ring rounded-full px-4 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-strong)] hover:text-[var(--text-primary)]"
+              className="focus-ring rounded-full px-4 py-2 text-sm font-semibold text-current opacity-80 transition hover:bg-[var(--surface-strong)] hover:opacity-100"
               href={item.href}
             >
               {t.nav[item.key]}
@@ -502,7 +541,7 @@ function Header({
             target="_blank"
             rel="noreferrer"
           >
-            <MessageCircle size={16} />
+            <TelegramIcon size={16} />
             {t.common.write}
           </a>
         </div>
@@ -521,17 +560,32 @@ function Header({
       <AnimatePresence>
         {mobileMenuOpen ? (
           <motion.div
-            className="fixed inset-0 top-20 z-40 bg-[var(--bg-primary)] lg:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] overflow-y-auto bg-[var(--bg-primary)] text-[var(--text-primary)] lg:hidden"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="section-shell flex h-[calc(100vh-80px)] flex-col justify-between py-10">
-              <nav className="grid gap-4">
+            <div className="section-shell flex min-h-svh flex-col py-5">
+              <div className="flex h-14 items-center justify-between gap-4">
+                <a className="focus-ring relative h-10 w-36 shrink-0" href="/" aria-label="KVARC-S">
+                  <LogoImage theme={theme} className="object-left" priority />
+                </a>
+                <button
+                  className="focus-ring grid h-12 w-12 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)]"
+                  type="button"
+                  aria-label={t.common.close}
+                  onClick={() => onMenuChange(false)}
+                >
+                  <X size={22} />
+                </button>
+              </div>
+
+              <nav className="mt-8 grid gap-2">
                 {navItems.map((item, index) => (
                   <motion.a
                     key={item.key}
-                    className="display-title focus-ring text-4xl text-[var(--text-primary)]"
+                    className="display-title focus-ring rounded-stone border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[clamp(1.45rem,9vw,2.55rem)] leading-[1.05] text-[var(--text-primary)] shadow-[0_18px_48px_-38px_rgba(0,0,0,0.6)]"
                     href={item.href}
                     initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -542,8 +596,8 @@ function Header({
                   </motion.a>
                 ))}
               </nav>
-              <div className="grid gap-4">
-                <div className="flex items-center gap-3">
+              <div className="mt-auto grid gap-3 pt-8">
+                <div className="flex items-center justify-center gap-3">
                   <ThemeToggle theme={theme} onClick={onThemeChange} />
                   <LanguageToggle lang={lang} onChange={onLanguageChange} />
                 </div>
@@ -557,7 +611,7 @@ function Header({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <MessageCircle size={18} />
+                  <TelegramIcon size={18} />
                   {t.common.write}
                 </a>
               </div>
@@ -583,36 +637,48 @@ function ThemeToggle({ theme, onClick }: { theme: Theme; onClick: () => void }) 
 }
 
 function LanguageToggle({ lang, onChange }: { lang: Lang; onChange: (lang: Lang) => void }) {
+  const options: Array<{ value: Lang; label: string }> = [
+    { value: "ru", label: "RU" },
+    { value: "uz", label: "UZ" }
+  ];
+
   return (
     <div
-      className="flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1"
+      className="relative grid grid-cols-2 rounded-full border border-[var(--border)] bg-[var(--surface)] p-1 shadow-[0_14px_42px_-34px_rgba(0,0,0,0.7)]"
       role="group"
       aria-label="Language"
     >
-      <button
+      <span
         className={cn(
-          "focus-ring grid h-9 w-9 place-items-center rounded-full text-lg transition",
-          lang === "ru" ? "scale-105 bg-[var(--accent)] shadow-[var(--shadow-glow)]" : "opacity-65 hover:opacity-100"
+          "pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-[var(--accent)] shadow-[var(--shadow-glow)] transition-transform duration-300 ease-out",
+          lang === "uz" && "translate-x-full"
         )}
-        type="button"
-        aria-pressed={lang === "ru"}
-        aria-label={translations.ru.languageName}
-        onClick={() => onChange("ru")}
-      >
-        <span aria-hidden>🇷🇺</span>
-      </button>
-      <button
-        className={cn(
-          "focus-ring grid h-9 w-9 place-items-center rounded-full text-lg transition",
-          lang === "uz" ? "scale-105 bg-[var(--accent)] shadow-[var(--shadow-glow)]" : "opacity-65 hover:opacity-100"
-        )}
-        type="button"
-        aria-pressed={lang === "uz"}
-        aria-label={translations.uz.languageName}
-        onClick={() => onChange("uz")}
-      >
-        <span aria-hidden>🇺🇿</span>
-      </button>
+      />
+      {options.map((option) => (
+        <button
+          key={option.value}
+          className={cn(
+            "focus-ring relative z-10 inline-flex h-10 w-[58px] items-center justify-center gap-1.5 rounded-full text-xs font-extrabold transition",
+            lang === option.value
+              ? "text-[var(--bg-primary)]"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          )}
+          type="button"
+          aria-pressed={lang === option.value}
+          aria-label={translations[option.value].languageName}
+          onClick={() => onChange(option.value)}
+        >
+          <Image
+            src={languageFlagSources[option.value]}
+            alt=""
+            width={22}
+            height={22}
+            unoptimized
+            className="h-5 w-5 shrink-0 rounded-full object-contain"
+          />
+          <span>{option.label}</span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -734,13 +800,13 @@ function Hero({ lang }: { lang: Lang }) {
 
       <div className="section-shell grid min-h-[calc(94vh-112px)] items-center gap-12 pb-10 lg:grid-cols-[minmax(0,0.94fr)_minmax(390px,0.68fr)]">
         <motion.div
-          className="max-w-[820px] rounded-stone border border-[var(--border)] bg-[var(--hero-panel)] p-6 shadow-[0_28px_100px_-56px_rgba(0,0,0,0.5)] backdrop-blur-xl md:p-8"
+          className="max-w-[760px]"
           initial={{ opacity: 0, y: 36 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
         >
           <p className="eyebrow mb-5">{t.hero.label}</p>
-          <h1 className="display-title max-w-3xl text-[clamp(2.05rem,3.75vw,4.35rem)] leading-[1.02] text-[var(--text-primary)]">
+          <h1 className="display-title max-w-3xl text-[clamp(2rem,3.35vw,3.95rem)] leading-[1.04] text-[var(--text-primary)] drop-shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
             {t.hero.title}
           </h1>
           <p className="mt-6 max-w-2xl text-base font-semibold leading-7 text-[var(--text-secondary)] md:text-lg">
@@ -749,8 +815,8 @@ function Hero({ lang }: { lang: Lang }) {
           <HeroBenefits items={t.hero.benefits} />
           <div className="mt-9 flex flex-col gap-4 sm:flex-row">
             <MagneticButton href={telHref(contact.phone)} className="justify-center px-6 py-4">
+              <Phone size={18} />
               {t.common.call}
-              <ArrowRight size={18} />
             </MagneticButton>
             <a
               href={contact.telegram}
@@ -758,8 +824,8 @@ function Hero({ lang }: { lang: Lang }) {
               rel="noreferrer"
               className="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-[var(--border)] px-6 py-4 font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >
+              <TelegramIcon size={18} />
               {t.common.write}
-              <MessageCircle size={18} />
             </a>
             <a
               href="#catalog"
@@ -833,10 +899,10 @@ function HeroBenefits({ items }: { items: readonly string[] }) {
         return (
           <div
             key={item}
-            className="flex min-h-20 items-center gap-4 border-[var(--border)] px-5 py-4 sm:border-r last:border-r-0"
+            className="flex min-h-[72px] items-center gap-3 border-[var(--border)] px-4 py-3 sm:border-r last:border-r-0"
           >
-            <Icon className="h-8 w-8 shrink-0 text-[var(--text-secondary)]" strokeWidth={1.7} />
-            <span className="text-sm font-extrabold leading-5 text-[var(--text-primary)] md:text-base">
+            <Icon className="h-7 w-7 shrink-0 text-[var(--text-secondary)]" strokeWidth={1.7} />
+            <span className="text-[0.78rem] font-extrabold leading-5 text-[var(--text-primary)] md:text-sm">
               {item}
             </span>
           </div>
@@ -1120,7 +1186,34 @@ function PaginationControls({
   className?: string;
 }) {
   const copy = sectionCopy[lang];
-  const pages = Array.from({ length: pageCount }, (_, index) => index + 1);
+  const pages = useMemo(() => {
+    if (pageCount <= 9) {
+      return Array.from({ length: pageCount }, (_, index) => index + 1);
+    }
+
+    if (page <= 5) {
+      return [...Array.from({ length: 9 }, (_, index) => index + 1), "end-ellipsis"] as const;
+    }
+
+    if (page >= pageCount - 4) {
+      return [
+        "start-ellipsis",
+        ...Array.from({ length: 9 }, (_, index) => pageCount - 8 + index)
+      ] as const;
+    }
+
+    return [
+      "start-ellipsis",
+      page - 3,
+      page - 2,
+      page - 1,
+      page,
+      page + 1,
+      page + 2,
+      page + 3,
+      "end-ellipsis"
+    ] as const;
+  }, [page, pageCount]);
 
   return (
     <div
@@ -1152,22 +1245,32 @@ function PaginationControls({
         >
           {copy.previous}
         </button>
-        {pages.map((item) => (
-          <button
-            key={item}
-            className={cn(
-              "focus-ring grid h-10 w-10 place-items-center rounded-full text-sm font-extrabold transition",
-              item === page
-                ? "bg-[var(--accent)] text-[var(--bg-primary)]"
-                : "border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
-            )}
-            type="button"
-            aria-label={`${copy.pageLabel} ${item}`}
-            onClick={() => onPageChange(item)}
-          >
-            {item}
-          </button>
-        ))}
+        {pages.map((item, index) =>
+          typeof item === "number" ? (
+            <button
+              key={item}
+              className={cn(
+                "focus-ring grid h-10 w-10 place-items-center rounded-full text-sm font-extrabold transition",
+                item === page
+                  ? "bg-[var(--accent)] text-[var(--bg-primary)]"
+                  : "border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              )}
+              type="button"
+              aria-label={`${copy.pageLabel} ${item}`}
+              onClick={() => onPageChange(item)}
+            >
+              {item}
+            </button>
+          ) : (
+            <span
+              key={`${item}-${index}`}
+              className="grid h-10 w-8 place-items-center text-sm font-extrabold text-[var(--text-muted)]"
+              aria-hidden="true"
+            >
+              ...
+            </span>
+          )
+        )}
         <button
           className="focus-ring min-h-10 rounded-full border border-[var(--border)] px-4 text-sm font-extrabold text-[var(--text-secondary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40"
           type="button"
@@ -1229,7 +1332,7 @@ function StoneCard({
           quality={64}
         />
         <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/52 to-transparent" />
-        <div className="absolute left-2 top-2 rounded-full bg-black/44 px-2 py-1 text-[0.65rem] font-extrabold text-white backdrop-blur">
+        <div className="absolute left-2 top-2 rounded-full bg-black/45 px-2 py-1 text-[0.65rem] font-extrabold text-white backdrop-blur">
           #{stone.number}
         </div>
         <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2 text-white">
@@ -1308,7 +1411,7 @@ function StoneDetails({
   }, [stone]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const detailsImage = detailImages[activeImageIndex] ?? "";
-  const detailsImageClassName = detailsImage.endsWith(".png") ? "object-contain p-5" : "object-cover";
+  const detailsImageClassName = "object-contain p-3";
 
   useEffect(() => {
     if (!stone) return;
@@ -1353,7 +1456,7 @@ function StoneDetails({
             exit={{ opacity: 0, y: 28, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 220, damping: 26 }}
           >
-            <div className="relative min-h-[360px] bg-[var(--surface-strong)] lg:min-h-full">
+            <div className="relative min-h-[360px] bg-[var(--bg-primary)] lg:min-h-full">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={detailsImage}
@@ -1375,7 +1478,7 @@ function StoneDetails({
                 </motion.div>
               </AnimatePresence>
               <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-              <p className="absolute bottom-5 left-5 rounded-full bg-black/44 px-4 py-2 text-sm font-extrabold text-white backdrop-blur">
+              <p className="absolute bottom-5 left-5 rounded-full bg-black/45 px-4 py-2 text-sm font-extrabold text-white backdrop-blur">
                 KVARC-S #{stone.number}
               </p>
               {detailImages.length > 1 ? (
@@ -1545,7 +1648,7 @@ function PortfolioMarquee({ lang, images }: { lang: Lang; images: string[] }) {
                   className="object-cover transition duration-500 group-hover:scale-[1.045]"
                   quality={48}
                 />
-                <span className="absolute inset-0 bg-black/0 transition group-hover:bg-black/12" />
+                <span className="absolute inset-0 bg-black/0 transition group-hover:bg-black/15" />
               </button>
             );
           })}
@@ -1711,6 +1814,7 @@ function GalleryLightbox({
   onChange: (index: number) => void;
 }) {
   const [zoom, setZoom] = useState(1);
+  const [direction, setDirection] = useState(0);
   const [touchState, setTouchState] = useState<{
     mode: "swipe" | "pinch" | null;
     startX: number;
@@ -1727,13 +1831,27 @@ function GalleryLightbox({
 
   const isOpen = activeIndex !== null && images[activeIndex] !== undefined;
   const activeSrc = isOpen ? images[activeIndex] : "";
+  const previousIndex =
+    activeIndex !== null && images.length > 0 ? (activeIndex - 1 + images.length) % images.length : 0;
+  const nextIndex =
+    activeIndex !== null && images.length > 0 ? (activeIndex + 1) % images.length : 0;
+  const previousSrc = images[previousIndex] ?? "";
+  const nextSrc = images[nextIndex] ?? "";
+
+  const changeTo = useCallback(
+    (index: number, nextDirection = 0) => {
+      setDirection(nextDirection);
+      onChange(index);
+    },
+    [onChange]
+  );
 
   const goTo = useCallback(
-    (direction: -1 | 1) => {
+    (nextDirection: -1 | 1) => {
       if (activeIndex === null || images.length === 0) return;
-      onChange((activeIndex + direction + images.length) % images.length);
+      changeTo((activeIndex + nextDirection + images.length) % images.length, nextDirection);
     },
-    [activeIndex, images.length, onChange]
+    [activeIndex, changeTo, images.length]
   );
 
   const updateZoom = useCallback((nextZoom: number) => {
@@ -1829,15 +1947,16 @@ function GalleryLightbox({
     <AnimatePresence>
       {isOpen ? (
         <motion.div
-          className="fixed inset-0 z-[120] bg-black/92 text-white"
+          className="fixed inset-0 z-[120] overflow-hidden bg-black/90 text-white backdrop-blur-md"
           role="dialog"
           aria-modal="true"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(212,161,92,0.18),transparent_28%),linear-gradient(180deg,rgba(0,0,0,0.18),rgba(0,0,0,0.62))]" />
           <button
-            className="focus-ring absolute right-4 top-4 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/18"
+            className="focus-ring absolute right-4 top-4 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20"
             type="button"
             aria-label={labels.close}
             onClick={onClose}
@@ -1853,7 +1972,7 @@ function GalleryLightbox({
 
           <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/10 p-2 backdrop-blur">
             <button
-              className="focus-ring grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/14 disabled:opacity-40"
+              className="focus-ring grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/15 disabled:opacity-40"
               type="button"
               aria-label={labels.zoomOut}
               disabled={zoom <= 1}
@@ -1865,7 +1984,7 @@ function GalleryLightbox({
               {Math.round(zoom * 100)}%
             </span>
             <button
-              className="focus-ring grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/14 disabled:opacity-40"
+              className="focus-ring grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/15 disabled:opacity-40"
               type="button"
               aria-label={labels.zoomIn}
               disabled={zoom >= 3}
@@ -1876,7 +1995,7 @@ function GalleryLightbox({
           </div>
 
           <button
-            className="focus-ring absolute left-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/18 md:grid"
+            className="focus-ring absolute left-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20 md:grid"
             type="button"
             aria-label={labels.previous}
             onClick={() => goTo(-1)}
@@ -1884,7 +2003,7 @@ function GalleryLightbox({
             <ChevronLeft size={26} />
           </button>
           <button
-            className="focus-ring absolute right-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/18 md:grid"
+            className="focus-ring absolute right-3 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white backdrop-blur transition hover:bg-white/20 md:grid"
             type="button"
             aria-label={labels.next}
             onClick={() => goTo(1)}
@@ -1893,30 +2012,76 @@ function GalleryLightbox({
           </button>
 
           <div
-            className="flex h-full w-full items-center justify-center overflow-hidden px-4 py-20"
+            className="relative flex h-full w-full items-center justify-center overflow-hidden px-4 py-20"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
             style={{ touchAction: "none" }}
           >
-            <motion.div
-              key={activeSrc}
-              className="relative h-full max-h-[82vh] w-full max-w-[min(94vw,1280px)]"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.22 }}
-            >
-              <Image
-                src={activeSrc}
-                alt={`KVARC-S gallery ${(activeIndex ?? 0) + 1}`}
-                fill
-                sizes="100vw"
-                className="object-contain transition-transform duration-200"
-                quality={90}
-                priority
-                style={{ transform: `scale(${zoom})` }}
-              />
-            </motion.div>
+            {images.length > 1 ? (
+              <>
+                <button
+                  className="focus-ring absolute left-[max(1rem,4vw)] top-1/2 z-10 hidden h-[58vh] w-[18vw] max-w-[260px] -translate-y-1/2 overflow-hidden rounded-stone border border-white/10 bg-white/5 opacity-50 shadow-[0_24px_80px_-44px_rgba(0,0,0,0.9)] transition hover:opacity-80 lg:block"
+                  type="button"
+                  aria-label={labels.previous}
+                  onClick={() => goTo(-1)}
+                >
+                  <Image
+                    src={previousSrc}
+                    alt=""
+                    fill
+                    sizes="18vw"
+                    className="object-cover"
+                    quality={42}
+                  />
+                  <span className="absolute inset-0 bg-black/35" />
+                  <span className="absolute left-4 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white backdrop-blur">
+                    <ChevronLeft size={24} />
+                  </span>
+                </button>
+                <button
+                  className="focus-ring absolute right-[max(1rem,4vw)] top-1/2 z-10 hidden h-[58vh] w-[18vw] max-w-[260px] -translate-y-1/2 overflow-hidden rounded-stone border border-white/10 bg-white/5 opacity-50 shadow-[0_24px_80px_-44px_rgba(0,0,0,0.9)] transition hover:opacity-80 lg:block"
+                  type="button"
+                  aria-label={labels.next}
+                  onClick={() => goTo(1)}
+                >
+                  <Image
+                    src={nextSrc}
+                    alt=""
+                    fill
+                    sizes="18vw"
+                    className="object-cover"
+                    quality={42}
+                  />
+                  <span className="absolute inset-0 bg-black/35" />
+                  <span className="absolute right-4 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white backdrop-blur">
+                    <ChevronRight size={24} />
+                  </span>
+                </button>
+              </>
+            ) : null}
+
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={activeSrc}
+                className="relative z-20 h-full max-h-[82vh] w-full max-w-[min(94vw,1040px)] lg:max-w-[min(54vw,980px)]"
+                initial={{ opacity: 0, x: direction * 46, scale: 0.985 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: direction * -46, scale: 0.985 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <Image
+                  src={activeSrc}
+                  alt={`KVARC-S gallery ${(activeIndex ?? 0) + 1}`}
+                  fill
+                  sizes="100vw"
+                  className="object-contain transition-transform duration-200"
+                  quality={90}
+                  priority
+                  style={{ transform: `scale(${zoom})` }}
+                />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </motion.div>
       ) : null}
@@ -2019,26 +2184,6 @@ function Contacts({ lang }: { lang: Lang }) {
           </p>
         </Reveal>
 
-        <div className="contact-strip surface mt-9 grid overflow-hidden rounded-stone md:grid-cols-3">
-          <ContactStripItem icon={<Phone size={22} />} label={t.contacts.phoneLabel}>
-            <a href={telHref(contact.phone)}>
-              {contact.phone}
-              <span className="block text-sm text-[var(--text-secondary)]">{contact.phonePerson}</span>
-            </a>
-          </ContactStripItem>
-          <ContactStripItem icon={<MessageCircle size={22} />} label={t.contacts.telegram}>
-            <a href={contact.telegram} target="_blank" rel="noreferrer">
-              @KVARC_S
-            </a>
-          </ContactStripItem>
-          <ContactStripItem icon={<Clock size={22} />} label={t.contacts.hours}>
-            <span>
-              {t.contacts.weekdays}
-              <span className="block text-sm text-[var(--text-secondary)]">{t.contacts.weekend}</span>
-            </span>
-          </ContactStripItem>
-        </div>
-
         <div className="mt-10 grid gap-8 lg:grid-cols-[0.82fr_1fr]">
           <Reveal className="grid content-start gap-4">
             <ContactCard icon={<Phone size={22} />} label={t.contacts.phoneLabel}>
@@ -2052,14 +2197,6 @@ function Contacts({ lang }: { lang: Lang }) {
             </ContactCard>
             <ContactCard icon={<MapPin size={22} />} label="Офис">
               <span>{t.contacts.address}</span>
-              <a
-                className="mt-2 inline-flex text-sm font-extrabold text-[var(--accent)]"
-                href={contact.map}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {t.common.openMap}
-              </a>
             </ContactCard>
             <ContactCard icon={<Clock size={22} />} label={t.contacts.hours}>
               <span>
@@ -2074,7 +2211,7 @@ function Contacts({ lang }: { lang: Lang }) {
                 target="_blank"
                 rel="noreferrer"
               >
-                <MessageCircle size={19} />
+                <TelegramIcon size={19} />
                 Telegram
               </a>
               <a
@@ -2098,46 +2235,11 @@ function Contacts({ lang }: { lang: Lang }) {
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
-              <a
-                className="focus-ring absolute bottom-4 left-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-white px-4 text-sm font-extrabold text-neutral-900 shadow-[0_14px_45px_-24px_rgba(0,0,0,0.8)]"
-                href={contact.map}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <MapPin size={17} className="text-red-500" />
-                {t.common.openMap}
-              </a>
             </div>
           </Reveal>
         </div>
       </div>
     </section>
-  );
-}
-
-function ContactStripItem({
-  icon,
-  label,
-  children
-}: {
-  icon: ReactNode;
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="contact-strip-item relative grid grid-cols-[56px_1fr] gap-4 p-5 md:p-6">
-      <div className="grid h-12 w-12 place-items-center rounded-full border border-[var(--border)] text-[var(--accent)]">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-muted)]">
-          {label}
-        </p>
-        <div className="mt-1 break-words text-lg font-extrabold leading-7 text-[var(--text-primary)] [&_a:hover]:text-[var(--accent)]">
-          {children}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -2226,7 +2328,7 @@ function Footer({ lang, theme }: { lang: Lang; theme: Theme }) {
               rel="noreferrer"
               aria-label="Telegram"
             >
-              <MessageCircle size={22} />
+              <TelegramIcon size={22} />
             </a>
             <a
               className="focus-ring grid h-14 w-14 place-items-center rounded-full border border-[var(--border)] text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"

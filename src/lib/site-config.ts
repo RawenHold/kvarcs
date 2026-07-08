@@ -19,7 +19,7 @@ export const siteConfig = {
   ogImage: "/catalog/11-black-calacatta.jpg",
   phone: "+998 90 005 59 55",
   phonePerson: "Михаил",
-  telegram: "https://t.me/KVARC_S",
+  telegram: "https://t.me/kvarcS",
   instagram: "https://www.instagram.com/kvarcs.uz",
   email: "kvarcs.uz@yandex.ru",
   foundedYear: "2007",

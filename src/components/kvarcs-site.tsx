@@ -538,19 +538,19 @@ function Header({
           : "bg-transparent"
       )}
     >
-      <div className="section-shell flex h-20 items-center justify-between gap-5">
-        <a className="focus-ring relative h-10 w-36 shrink-0" href="/" aria-label="KVARC-S">
+      <div className="section-shell flex h-20 items-center justify-between gap-3 xl:gap-4">
+        <a className="focus-ring relative h-10 w-32 shrink-0 2xl:w-36" href="/" aria-label="KVARC-S">
           <LogoImage theme={theme} className="object-left" priority />
         </a>
 
         <nav
-          className="hidden items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--header-nav-bg)] p-1 text-[var(--header-nav-text)] shadow-[0_18px_56px_-36px_rgba(0,0,0,0.68)] backdrop-blur-xl lg:flex"
+          className="hidden min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-[var(--border)] bg-[var(--header-nav-bg)] p-1 text-[var(--header-nav-text)] shadow-[0_18px_56px_-36px_rgba(0,0,0,0.68)] backdrop-blur-xl xl:flex"
           aria-label="Primary navigation"
         >
           {navItems.map((item) => (
             <a
               key={item.key}
-              className="focus-ring rounded-full px-4 py-2 text-sm font-semibold text-current opacity-80 transition hover:bg-[var(--surface-strong)] hover:opacity-100"
+              className="focus-ring rounded-full px-3 py-2 text-center text-[0.82rem] font-semibold leading-tight text-current opacity-80 transition hover:bg-[var(--surface-strong)] hover:opacity-100 2xl:px-4 2xl:text-sm"
               href={item.href}
             >
               {t.nav[item.key]}
@@ -558,15 +558,15 @@ function Header({
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden shrink-0 items-center gap-2 xl:flex 2xl:gap-3">
           <ThemeToggle theme={theme} onClick={onThemeChange} />
           <LanguageToggle lang={lang} onChange={onLanguageChange} />
-          <MagneticButton href={telHref(contact.phone)} className="px-5 py-3 text-sm">
+          <MagneticButton href={telHref(contact.phone)} className="px-4 py-3 text-sm 2xl:px-5">
             <Phone size={16} />
             {t.common.call}
           </MagneticButton>
           <a
-            className="focus-ring inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            className="focus-ring inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] 2xl:px-5"
             href={contact.telegramChat}
             target="_blank"
             rel="noreferrer"
@@ -577,7 +577,7 @@ function Header({
         </div>
 
         <button
-          className="focus-ring grid h-12 w-12 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] lg:hidden"
+          className="focus-ring grid h-12 w-12 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] xl:hidden"
           type="button"
           aria-label={mobileMenuOpen ? t.common.close : "Menu"}
           aria-expanded={mobileMenuOpen}
@@ -590,15 +590,15 @@ function Header({
       <AnimatePresence>
         {mobileMenuOpen ? (
           <motion.div
-            className="fixed inset-0 z-[120] overflow-y-auto bg-[var(--bg-primary)] text-[var(--text-primary)] lg:hidden"
+            className="fixed inset-0 z-[120] overflow-y-auto bg-[var(--bg-primary)] text-[var(--text-primary)] xl:hidden"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="section-shell flex min-h-svh flex-col py-5">
+            <div className="section-shell flex min-h-dvh flex-col py-5">
               <div className="flex h-14 items-center justify-between gap-4">
-                <a className="focus-ring relative h-10 w-36 shrink-0" href="/" aria-label="KVARC-S">
+                <a className="focus-ring relative h-10 w-32 shrink-0" href="/" aria-label="KVARC-S">
                   <LogoImage theme={theme} className="object-left" priority />
                 </a>
                 <button
@@ -611,11 +611,11 @@ function Header({
                 </button>
               </div>
 
-              <nav className="mt-7 divide-y divide-[var(--border)] overflow-hidden rounded-stone border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_72%,transparent)] shadow-[0_24px_80px_-50px_rgba(0,0,0,0.78)] backdrop-blur-xl">
+              <nav className="mt-7 divide-y divide-[var(--border)] overflow-hidden rounded-stone border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_76%,transparent)] shadow-[0_24px_80px_-50px_rgba(0,0,0,0.78)] backdrop-blur-xl">
                 {navItems.map((item, index) => (
                   <motion.a
                     key={item.key}
-                    className="display-title focus-ring group relative overflow-hidden px-5 py-4 text-[clamp(1.15rem,6.4vw,1.7rem)] leading-none text-[var(--text-primary)] transition hover:bg-[var(--surface-strong)]"
+                    className="focus-ring group relative flex min-h-14 w-full items-center justify-between gap-4 overflow-hidden px-5 py-3 text-base font-extrabold leading-tight text-[var(--text-primary)] transition hover:bg-[var(--surface-strong)]"
                     href={item.href}
                     initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -623,7 +623,8 @@ function Header({
                     onClick={(event) => openMobileLink(item.href, event)}
                   >
                     <span className="absolute inset-y-3 left-0 w-1 origin-y scale-y-0 rounded-r-full bg-[var(--accent)] transition group-hover:scale-y-100" />
-                    {t.nav[item.key]}
+                    <span>{t.nav[item.key]}</span>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-[var(--text-muted)] transition group-hover:translate-x-1 group-hover:text-[var(--accent)]" />
                   </motion.a>
                 ))}
               </nav>
@@ -654,7 +655,7 @@ function Header({
         {menuTransition ? (
           <motion.div
             key={menuTransition.href}
-            className="pointer-events-none fixed z-[140] h-12 w-12 rounded-full bg-[radial-gradient(circle_at_center,var(--accent)_0%,var(--surface)_58%,var(--bg-primary)_100%)] shadow-[0_0_80px_rgba(212,161,92,0.34)] lg:hidden"
+            className="pointer-events-none fixed z-[140] h-12 w-12 rounded-full bg-[radial-gradient(circle_at_center,var(--accent)_0%,var(--surface)_58%,var(--bg-primary)_100%)] shadow-[0_0_80px_rgba(212,161,92,0.34)] xl:hidden"
             style={{
               left: menuTransition.x - 24,
               top: menuTransition.y - 24

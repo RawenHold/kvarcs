@@ -553,63 +553,65 @@ function Header({
   };
 
   return (
-    <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-[90] transition-all duration-300",
-        scrolled
-          ? "border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] shadow-mineral backdrop-blur-xl"
-          : "bg-transparent"
-      )}
-    >
-      <div className="section-shell flex h-20 items-center justify-between gap-3 xl:gap-4">
-        <a className="focus-ring relative h-10 w-32 shrink-0 2xl:w-36" href="/" aria-label="KVARC-S">
-          <LogoImage theme={theme} className="object-left" priority />
-        </a>
-
-        <nav
-          className="hidden min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-[var(--border)] bg-[var(--header-nav-bg)] p-1 text-[var(--header-nav-text)] shadow-[0_18px_56px_-36px_rgba(0,0,0,0.68)] backdrop-blur-xl xl:flex"
-          aria-label="Primary navigation"
-        >
-          {navItems.map((item) => (
-            <a
-              key={item.key}
-              className="focus-ring rounded-full px-3 py-2 text-center text-[0.82rem] font-semibold leading-tight text-current opacity-80 transition hover:bg-[var(--surface-strong)] hover:opacity-100 2xl:px-4 2xl:text-sm"
-              href={item.href}
-            >
-              {t.nav[item.key]}
-            </a>
-          ))}
-        </nav>
-
-        <div className="hidden shrink-0 items-center gap-2 xl:flex 2xl:gap-3">
-          <ThemeToggle theme={theme} onClick={onThemeChange} />
-          <LanguageToggle lang={lang} onChange={onLanguageChange} />
-          <MagneticButton href={telHref(contact.phone)} className="px-4 py-3 text-sm 2xl:px-5">
-            <Phone size={16} />
-            {t.common.call}
-          </MagneticButton>
-          <a
-            className="focus-ring inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] 2xl:px-5"
-            href={contact.telegramChat}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <TelegramIcon size={16} />
-            {t.common.write}
+    <>
+      <header
+        className={cn(
+          "fixed inset-x-0 top-0 z-[90] transition-all duration-300",
+          scrolled
+            ? "border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] shadow-mineral backdrop-blur-xl"
+            : "bg-transparent"
+        )}
+      >
+        <div className="section-shell flex h-20 items-center justify-between gap-3 xl:gap-4">
+          <a className="focus-ring relative h-10 w-32 shrink-0 2xl:w-36" href="/" aria-label="KVARC-S">
+            <LogoImage theme={theme} className="object-left" priority />
           </a>
-        </div>
 
-        <button
-          className="focus-ring grid h-12 w-12 touch-manipulation place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] xl:hidden"
-          type="button"
-          aria-label={mobileMenuOpen ? t.common.close : "Menu"}
-          aria-expanded={mobileMenuOpen}
-          onPointerDown={toggleMobileMenuFromPointer}
-          onClick={toggleMobileMenuFromKeyboard}
-        >
-          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </div>
+          <nav
+            className="hidden min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-[var(--border)] bg-[var(--header-nav-bg)] p-1 text-[var(--header-nav-text)] shadow-[0_18px_56px_-36px_rgba(0,0,0,0.68)] backdrop-blur-xl xl:flex"
+            aria-label="Primary navigation"
+          >
+            {navItems.map((item) => (
+              <a
+                key={item.key}
+                className="focus-ring rounded-full px-3 py-2 text-center text-[0.82rem] font-semibold leading-tight text-current opacity-80 transition hover:bg-[var(--surface-strong)] hover:opacity-100 2xl:px-4 2xl:text-sm"
+                href={item.href}
+              >
+                {t.nav[item.key]}
+              </a>
+            ))}
+          </nav>
+
+          <div className="hidden shrink-0 items-center gap-2 xl:flex 2xl:gap-3">
+            <ThemeToggle theme={theme} onClick={onThemeChange} />
+            <LanguageToggle lang={lang} onChange={onLanguageChange} />
+            <MagneticButton href={telHref(contact.phone)} className="px-4 py-3 text-sm 2xl:px-5">
+              <Phone size={16} />
+              {t.common.call}
+            </MagneticButton>
+            <a
+              className="focus-ring inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)] 2xl:px-5"
+              href={contact.telegramChat}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <TelegramIcon size={16} />
+              {t.common.write}
+            </a>
+          </div>
+
+          <button
+            className="focus-ring grid h-12 w-12 touch-manipulation place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] xl:hidden"
+            type="button"
+            aria-label={mobileMenuOpen ? t.common.close : "Menu"}
+            aria-expanded={mobileMenuOpen}
+            onPointerDown={toggleMobileMenuFromPointer}
+            onClick={toggleMobileMenuFromKeyboard}
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+      </header>
 
       <AnimatePresence>
         {mobileMenuOpen ? (
@@ -693,7 +695,7 @@ function Header({
           />
         ) : null}
       </AnimatePresence>
-    </header>
+    </>
   );
 }
 

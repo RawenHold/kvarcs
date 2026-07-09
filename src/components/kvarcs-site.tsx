@@ -85,7 +85,7 @@ const languageFlagSources: Readonly<Record<Lang, string>> = Object.freeze({
 const sectionCopy = {
   ru: {
     applicationsEyebrow: "Области применения",
-    applicationsTitle: "Кварц для поверхностей, которые работают каждый день",
+    applicationsTitle: "Поверхности KVARC-S для Premium / Luxury интерьеров",
     portfolioEyebrow: "Портфолио",
     portfolioTitle: "Готовые работы KVARC-S",
     portfolioBody:

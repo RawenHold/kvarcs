@@ -131,6 +131,70 @@ img {
   border: 1px solid var(--border);
 }
 
+.partner-region {
+  --partner-accent: var(--accent);
+}
+
+.partner-region-label {
+  color: var(--partner-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.partner-region-badge {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--partner-accent) 34%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--partner-accent) 12%, var(--surface));
+  padding-inline: 1rem;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.partner-card {
+  border: 1px solid color-mix(in srgb, var(--partner-accent) 24%, var(--border));
+  background:
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--partner-accent) 13%, transparent), transparent 14rem),
+    linear-gradient(135deg, color-mix(in srgb, var(--partner-accent) 5%, var(--surface)), var(--surface));
+  box-shadow: var(--shadow-soft);
+}
+
+.partner-logo-frame {
+  border: 1px solid color-mix(in srgb, var(--partner-accent) 20%, var(--border));
+  background: color-mix(in srgb, var(--partner-accent) 8%, var(--surface-strong));
+}
+
+.partner-logo-light {
+  display: none !important;
+}
+
+html[data-theme="cloud"] .partner-logo-dark {
+  display: none !important;
+}
+
+html[data-theme="cloud"] .partner-logo-light {
+  display: block !important;
+}
+
+.partner-phone-link {
+  border: 1px solid color-mix(in srgb, var(--partner-accent) 28%, var(--border));
+  background: color-mix(in srgb, var(--partner-accent) 12%, transparent);
+  color: var(--text-primary);
+}
+
+.partner-phone-link:hover {
+  border-color: var(--partner-accent);
+  color: var(--partner-accent);
+}
+
 .eyebrow {
   color: var(--accent);
   font-size: 0.74rem;

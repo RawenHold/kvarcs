@@ -43,13 +43,14 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
   type MouseEvent,
   type PointerEvent,
   type TouchEvent
 } from "react";
 import { stones, type Stone } from "@/lib/catalog-data";
-import { partners } from "@/lib/partners-data";
+import { partnerRegions, partners } from "@/lib/partners-data";
 import { siteConfig } from "@/lib/site-config";
 import { translations, type Lang } from "@/lib/translations";
 import { cn, telHref } from "@/lib/utils";
@@ -2145,9 +2146,40 @@ function Partners({ lang }: { lang: Lang }) {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return partners;
     return partners.filter((partner) =>
-      `${partner.company} ${partner.contact}`.toLowerCase().includes(normalized)
+      [
+        partner.company,
+        partner.phones.join(" "),
+        partnerRegions.find((region) => region.key === partner.regionKey)?.title,
+        partnerRegions.find((region) => region.key === partner.regionKey)?.country
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(normalized)
     );
   }, [query]);
+  const groupedPartners = useMemo(
+    () =>
+      partnerRegions
+        .map((region) => ({
+          region,
+          items: filtered.filter((partner) => partner.regionKey === region.key)
+        }))
+        .filter((group) => group.items.length > 0),
+    [filtered]
+  );
+  const kindLabels = {
+    ru: {
+      tashkent: "Ташкент",
+      "uzbekistan-region": "Другой регион",
+      foreign: "Другая страна"
+    },
+    uz: {
+      tashkent: "Toshkent",
+      "uzbekistan-region": "Boshqa hudud",
+      foreign: "Boshqa davlat"
+    }
+  } as const;
 
   return (
     <section id="partners" className="py-24 pt-28">
@@ -2175,36 +2207,77 @@ function Partners({ lang }: { lang: Lang }) {
           />
         </label>
 
-        {filtered.length > 0 ? (
-          <div className="mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((partner) => (
-              <article
-                key={`${partner.company}-${partner.contact}`}
-                className="surface rounded-stone p-4 transition duration-300 hover:scale-[1.01] hover:shadow-[var(--shadow-glow)]"
+        {groupedPartners.length > 0 ? (
+          <div className="mt-10 grid gap-8">
+            {groupedPartners.map(({ region, items }) => (
+              <div
+                key={region.key}
+                className="partner-region"
+                style={{ "--partner-accent": region.accent } as CSSProperties}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate text-lg font-extrabold leading-6">{partner.company}</h3>
-                    <p className="mt-0.5 text-sm font-semibold text-[var(--text-secondary)]">
-                      {partner.contact}
-                    </p>
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="partner-region-label">{kindLabels[lang][region.kind]}</p>
+                    <h3 className="display-title mt-1 text-3xl leading-tight md:text-4xl">
+                      {region.title}
+                    </h3>
                   </div>
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--accent)] text-[var(--bg-primary)]">
-                    <Phone size={16} />
+                  <div className="partner-region-badge">
+                    {region.country}
                   </div>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {partner.phones.map((phone) => (
-                    <a
-                      key={phone}
-                      className="focus-ring rounded-full border border-[var(--border)] px-3 py-2 text-xs font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                      href={telHref(phone)}
+
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {items.map((partner) => (
+                    <article
+                      key={`${partner.regionKey}-${partner.company}`}
+                      className="partner-card rounded-stone p-4 transition duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-glow)]"
                     >
-                      {phone}
-                    </a>
+                      <div className="flex min-h-[86px] items-center gap-4">
+                        <div className="partner-logo-frame relative grid h-16 w-24 shrink-0 place-items-center rounded-[8px] p-3">
+                          <Image
+                            src={partner.logo.dark}
+                            alt=""
+                            fill
+                            sizes="96px"
+                            unoptimized
+                            className="partner-logo-dark object-contain p-3"
+                          />
+                          <Image
+                            src={partner.logo.light}
+                            alt=""
+                            fill
+                            sizes="96px"
+                            unoptimized
+                            className="partner-logo-light object-contain p-3"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="truncate text-lg font-extrabold leading-6">
+                            {partner.company}
+                          </h4>
+                          <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                            {region.title}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid gap-2">
+                        {partner.phones.map((phone) => (
+                          <a
+                            key={phone}
+                            className="focus-ring partner-phone-link inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-extrabold transition"
+                            href={telHref(phone)}
+                          >
+                            <Phone size={16} />
+                            {phone}
+                          </a>
+                        ))}
+                      </div>
+                    </article>
                   ))}
                 </div>
-              </article>
+              </div>
             ))}
           </div>
         ) : (

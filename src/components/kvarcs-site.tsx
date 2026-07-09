@@ -45,6 +45,7 @@ import {
   useState,
   type ReactNode,
   type MouseEvent,
+  type PointerEvent,
   type TouchEvent
 } from "react";
 import { stones, type Stone } from "@/lib/catalog-data";
@@ -529,6 +530,28 @@ function Header({
     }, 360);
   };
 
+  const toggleMobileMenuFromPointer = (event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    onMenuChange(!mobileMenuOpen);
+  };
+
+  const toggleMobileMenuFromKeyboard = (event: MouseEvent<HTMLButtonElement>) => {
+    if (event.detail === 0) {
+      onMenuChange(!mobileMenuOpen);
+    }
+  };
+
+  const closeMobileMenuFromPointer = (event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    onMenuChange(false);
+  };
+
+  const closeMobileMenuFromKeyboard = (event: MouseEvent<HTMLButtonElement>) => {
+    if (event.detail === 0) {
+      onMenuChange(false);
+    }
+  };
+
   return (
     <header
       className={cn(
@@ -577,11 +600,12 @@ function Header({
         </div>
 
         <button
-          className="focus-ring grid h-12 w-12 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] xl:hidden"
+          className="focus-ring grid h-12 w-12 touch-manipulation place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] xl:hidden"
           type="button"
           aria-label={mobileMenuOpen ? t.common.close : "Menu"}
           aria-expanded={mobileMenuOpen}
-          onClick={() => onMenuChange(!mobileMenuOpen)}
+          onPointerDown={toggleMobileMenuFromPointer}
+          onClick={toggleMobileMenuFromKeyboard}
         >
           {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
@@ -602,10 +626,11 @@ function Header({
                   <LogoImage theme={theme} className="object-left" priority />
                 </a>
                 <button
-                  className="focus-ring grid h-12 w-12 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)]"
+                  className="focus-ring grid h-12 w-12 touch-manipulation place-items-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)]"
                   type="button"
                   aria-label={t.common.close}
-                  onClick={() => onMenuChange(false)}
+                  onPointerDown={closeMobileMenuFromPointer}
+                  onClick={closeMobileMenuFromKeyboard}
                 >
                   <X size={22} />
                 </button>

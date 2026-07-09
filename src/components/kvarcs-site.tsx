@@ -1092,7 +1092,6 @@ function Catalog({
   const t = translations[lang];
   const [view, setView] = useState<ViewMode>("grid");
   const [selectedStone, setSelectedStone] = useState<Stone | null>(null);
-  const [cursor, setCursor] = useState({ x: 0, y: 0, active: false, visible: false });
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const pageCount = Math.max(1, Math.ceil(stones.length / pageSize));
@@ -1106,29 +1105,7 @@ function Catalog({
     <section
       id="catalog"
       className="relative py-24 pt-28"
-      onMouseMove={(event) =>
-        setCursor((state) => ({
-          ...state,
-          x: event.clientX,
-          y: event.clientY,
-          visible: true
-        }))
-      }
-      onMouseLeave={() => setCursor((state) => ({ ...state, visible: false, active: false }))}
     >
-      <motion.div
-        className="pointer-events-none fixed z-[80] hidden h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--accent)] bg-[var(--surface)] text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--accent)] shadow-[var(--shadow-glow)] lg:flex"
-        animate={{
-          x: cursor.x,
-          y: cursor.y,
-          scale: cursor.active ? 1 : 0.42,
-          opacity: cursor.visible ? 1 : 0
-        }}
-        transition={{ type: "spring", stiffness: 420, damping: 34 }}
-      >
-        {cursor.active ? t.common.view : ""}
-      </motion.div>
-
       <div className="section-shell">
         <Reveal className="mx-auto max-w-4xl text-center">
             <p className="eyebrow">{t.catalog.eyebrow}</p>
@@ -1170,7 +1147,6 @@ function Catalog({
                   stone={stone}
                   view={view}
                   onDetails={() => setSelectedStone(stone)}
-                  onHover={(active) => setCursor((state) => ({ ...state, active }))}
                   onRequestQuote={() => onRequestQuote(stone)}
                 />
               ))}
@@ -1355,14 +1331,12 @@ function StoneCard({
   stone,
   view,
   onDetails,
-  onHover,
   onRequestQuote
 }: {
   lang: Lang;
   stone: Stone;
   view: ViewMode;
   onDetails: () => void;
-  onHover: (active: boolean) => void;
   onRequestQuote: () => void;
 }) {
   const t = translations[lang];
@@ -1378,8 +1352,6 @@ function StoneCard({
         "surface group overflow-hidden rounded-stone",
         isList && "grid md:grid-cols-[minmax(140px,180px)_1fr]"
       )}
-      onMouseEnter={() => onHover(true)}
-      onMouseLeave={() => onHover(false)}
     >
       <button
         className={cn(
@@ -1496,7 +1468,7 @@ function StoneDetails({
     if (reduceMotion || detailImages.length < 2) return;
     const interval = window.setInterval(() => {
       setActiveImageIndex((index) => (index + 1) % detailImages.length);
-    }, 3000);
+    }, 6000);
     return () => window.clearInterval(interval);
   }, [detailImages.length, reduceMotion]);
 
@@ -1618,6 +1590,7 @@ function StoneDetails({
 function Services({ lang }: { lang: Lang }) {
   const t = translations[lang];
   const icons = [Factory, Ruler, Calculator, Hammer, Truck, PackageCheck];
+  const partnersCta = lang === "ru" ? "Выбрать обработчика" : "Ustani tanlash";
 
   return (
     <section id="services" className="py-24">
@@ -1662,6 +1635,13 @@ function Services({ lang }: { lang: Lang }) {
               );
             })}
           </ol>
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <MagneticButton href="/partners" className="justify-center px-6 py-4">
+            {partnersCta}
+            <ArrowRight size={18} />
+          </MagneticButton>
         </div>
       </div>
     </section>

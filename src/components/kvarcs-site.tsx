@@ -1516,7 +1516,6 @@ function StoneDetails({
                   />
                 </motion.div>
               </AnimatePresence>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
               <p className="absolute bottom-5 left-5 rounded-full bg-black/45 px-4 py-2 text-sm font-extrabold text-white backdrop-blur">
                 KVARC-S #{stone.number}
               </p>
@@ -2168,19 +2167,6 @@ function Partners({ lang }: { lang: Lang }) {
         .filter((group) => group.items.length > 0),
     [filtered]
   );
-  const kindLabels = {
-    ru: {
-      tashkent: "Ташкент",
-      "uzbekistan-region": "Другой регион",
-      foreign: "Другая страна"
-    },
-    uz: {
-      tashkent: "Toshkent",
-      "uzbekistan-region": "Boshqa hudud",
-      foreign: "Boshqa davlat"
-    }
-  } as const;
-
   return (
     <section id="partners" className="py-24 pt-28">
       <div className="section-shell">
@@ -2215,16 +2201,11 @@ function Partners({ lang }: { lang: Lang }) {
                 className="partner-region"
                 style={{ "--partner-accent": region.accent } as CSSProperties}
               >
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="partner-region-label">{kindLabels[lang][region.kind]}</p>
-                    <h3 className="display-title mt-1 text-3xl leading-tight md:text-4xl">
-                      {region.title}
-                    </h3>
-                  </div>
-                  <div className="partner-region-badge">
-                    {region.country}
-                  </div>
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="h-px w-10 bg-[var(--partner-accent)]" aria-hidden="true" />
+                  <h3 className="display-title text-3xl leading-tight md:text-4xl">
+                    {region.title}
+                  </h3>
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -2256,9 +2237,6 @@ function Partners({ lang }: { lang: Lang }) {
                           <h4 className="truncate text-lg font-extrabold leading-6">
                             {partner.company}
                           </h4>
-                          <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                            {region.title}
-                          </p>
                         </div>
                       </div>
 
@@ -2334,7 +2312,7 @@ function Contacts({ lang }: { lang: Lang }) {
                 rel="noreferrer"
               >
                 <TelegramIcon size={19} />
-                Telegram
+                {lang === "ru" ? "Telegram канал" : "Telegram kanal"}
               </a>
               <a
                 className="focus-ring inline-flex min-h-14 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 font-extrabold text-[var(--text-primary)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"

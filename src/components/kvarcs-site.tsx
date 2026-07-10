@@ -1057,7 +1057,7 @@ function CatalogMarquee({ lang }: { lang: Lang }) {
           {loopStones.map((stone, index) => (
             <a
               key={`${stone.slug}-${index}`}
-              className="focus-ring group relative aspect-[5/4] w-[58vw] max-w-[280px] shrink-0 overflow-hidden rounded-[8px] bg-white shadow-[var(--shadow-soft)] sm:w-[30vw] lg:w-[20vw] xl:w-[15vw]"
+              className="focus-ring group relative aspect-[5/4] w-[66vw] max-w-[350px] shrink-0 overflow-hidden rounded-[8px] bg-white shadow-[var(--shadow-soft)] sm:w-[36vw] lg:w-[24vw] xl:w-[18vw]"
               href="/catalog"
               aria-label={`${t.common.view} ${stone.name}`}
             >
@@ -1065,7 +1065,7 @@ function CatalogMarquee({ lang }: { lang: Lang }) {
                 src={stone.image}
                 alt={stone.name}
                 fill
-                sizes="(max-width: 640px) 58vw, (max-width: 1024px) 30vw, 15vw"
+                sizes="(max-width: 640px) 66vw, (max-width: 1024px) 36vw, 18vw"
                 className="object-contain transition duration-500 group-hover:scale-[1.015]"
                 quality={48}
               />
@@ -1175,6 +1175,7 @@ function Catalog({
         lang={lang}
         stone={selectedStone}
         onClose={() => setSelectedStone(null)}
+        onSelectStone={setSelectedStone}
         onRequestQuote={(stone) => {
           setSelectedStone(null);
           onRequestQuote(stone);
@@ -1435,11 +1436,13 @@ function StoneDetails({
   lang,
   stone,
   onClose,
+  onSelectStone,
   onRequestQuote
 }: {
   lang: Lang;
   stone: Stone | null;
   onClose: () => void;
+  onSelectStone: (stone: Stone) => void;
   onRequestQuote: (stone: Stone) => void;
 }) {
   const t = translations[lang];
@@ -1451,6 +1454,13 @@ function StoneDetails({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const detailsImage = detailImages[activeImageIndex] ?? "";
   const detailsImageClassName = "object-contain p-3";
+  const previewStones = useMemo(() => {
+    if (!stone) return [];
+    const currentIndex = Math.max(0, stones.findIndex((item) => item.slug === stone.slug));
+    const count = Math.min(10, stones.length);
+
+    return Array.from({ length: count }, (_, offset) => stones[(currentIndex + offset) % stones.length]);
+  }, [stone]);
 
   useEffect(() => {
     if (!stone) return;
@@ -1495,46 +1505,78 @@ function StoneDetails({
             exit={{ opacity: 0, y: 28, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 220, damping: 26 }}
           >
-            <div className="relative min-h-[360px] bg-[var(--bg-primary)] lg:min-h-full">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={detailsImage}
-                  className="absolute inset-0"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Image
-                    src={detailsImage}
-                    alt={stone.name}
-                    fill
-                    className={detailsImageClassName}
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    quality={82}
-                    priority
-                  />
-                </motion.div>
-              </AnimatePresence>
-              <p className="absolute bottom-5 left-5 rounded-full bg-black/45 px-4 py-2 text-sm font-extrabold text-white backdrop-blur">
-                KVARC-S #{stone.number}
-              </p>
-              {detailImages.length > 1 ? (
-                <div className="absolute bottom-5 right-5 flex gap-1.5">
-                  {detailImages.map((image, index) => (
-                    <button
-                      key={image}
-                      className={cn(
-                        "focus-ring h-2.5 rounded-full transition",
-                        activeImageIndex === index ? "w-7 bg-white" : "w-2.5 bg-white/45"
-                      )}
-                      type="button"
-                      aria-label={`${t.common.view} ${index + 1}`}
-                      onClick={() => setActiveImageIndex(index)}
+            <div className="grid min-h-[360px] bg-[var(--bg-primary)] lg:min-h-full lg:grid-rows-[1fr_auto]">
+              <div className="relative min-h-[320px] lg:min-h-[520px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={detailsImage}
+                    className="absolute inset-0"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Image
+                      src={detailsImage}
+                      alt={stone.name}
+                      fill
+                      className={detailsImageClassName}
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      quality={82}
+                      priority
                     />
-                  ))}
+                  </motion.div>
+                </AnimatePresence>
+                <p className="absolute bottom-5 left-5 rounded-full bg-black/45 px-4 py-2 text-sm font-extrabold text-white backdrop-blur">
+                  KVARC-S #{stone.number}
+                </p>
+                {detailImages.length > 1 ? (
+                  <div className="absolute bottom-5 right-5 flex gap-1.5">
+                    {detailImages.map((image, index) => (
+                      <button
+                        key={image}
+                        className={cn(
+                          "focus-ring h-2.5 rounded-full transition",
+                          activeImageIndex === index ? "w-7 bg-white" : "w-2.5 bg-white/45"
+                        )}
+                        type="button"
+                        aria-label={`${t.common.view} ${index + 1}`}
+                        onClick={() => setActiveImageIndex(index)}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <div className="border-t border-[var(--border)] p-3">
+                <div className="media-preview-strip">
+                  {previewStones.map((previewStone) => {
+                    const previewImage = previewStone.detailImages?.[0] ?? previewStone.image;
+
+                    return (
+                      <button
+                        key={previewStone.slug}
+                        className={cn(
+                          "media-preview-thumb",
+                          previewStone.slug === stone.slug && "is-active"
+                        )}
+                        type="button"
+                        aria-label={`${t.common.view} ${previewStone.name}`}
+                        onClick={() => onSelectStone(previewStone)}
+                      >
+                        <Image
+                          src={previewImage}
+                          alt=""
+                          fill
+                          sizes="96px"
+                          className="object-contain p-1"
+                          quality={42}
+                        />
+                        <span className="media-preview-thumb-number">#{previewStone.number}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-              ) : null}
+              </div>
             </div>
             <div className="p-6 md:p-8">
               <div className="flex items-start justify-between gap-4">
@@ -1681,7 +1723,7 @@ function PortfolioMarquee({ lang, images }: { lang: Lang; images: string[] }) {
             return (
               <button
                 key={`${src}-${index}`}
-                className="focus-ring group relative aspect-[4/3] w-[58vw] max-w-[320px] shrink-0 overflow-hidden rounded-[8px] bg-[var(--surface-strong)] shadow-[var(--shadow-soft)] sm:w-[34vw] lg:w-[24vw] xl:w-[18vw]"
+                className="focus-ring group relative aspect-[4/3] w-[66vw] max-w-[410px] shrink-0 overflow-hidden rounded-[8px] bg-[var(--surface-strong)] shadow-[var(--shadow-soft)] sm:w-[40vw] lg:w-[29vw] xl:w-[22vw]"
                 type="button"
                 aria-label={`${copy.portfolioOpen} ${realIndex + 1}`}
                 onClick={() => setActiveIndex(realIndex)}
@@ -1690,7 +1732,7 @@ function PortfolioMarquee({ lang, images }: { lang: Lang; images: string[] }) {
                   src={src}
                   alt={`KVARC-S portfolio ${realIndex + 1}`}
                   fill
-                  sizes="(max-width: 640px) 58vw, (max-width: 1024px) 34vw, 18vw"
+                  sizes="(max-width: 640px) 66vw, (max-width: 1024px) 40vw, 22vw"
                   className="object-cover transition duration-500 group-hover:scale-[1.045]"
                   quality={48}
                 />
@@ -1705,6 +1747,7 @@ function PortfolioMarquee({ lang, images }: { lang: Lang; images: string[] }) {
         images={images}
         activeIndex={activeIndex}
         labels={copy}
+        showPreviewStrip
         onClose={() => setActiveIndex(null)}
         onChange={setActiveIndex}
       />
@@ -1786,6 +1829,7 @@ function Portfolio({ lang, images }: { lang: Lang; images: string[] }) {
         images={visibleImages}
         activeIndex={activeIndex}
         labels={copy}
+        showPreviewStrip
         onClose={() => setActiveIndex(null)}
         onChange={setActiveIndex}
       />
@@ -1850,12 +1894,14 @@ function GalleryLightbox({
   images,
   activeIndex,
   labels,
+  showPreviewStrip = false,
   onClose,
   onChange
 }: {
   images: string[];
   activeIndex: number | null;
   labels: GalleryLabels;
+  showPreviewStrip?: boolean;
   onClose: () => void;
   onChange: (index: number) => void;
 }) {
@@ -1883,6 +1929,12 @@ function GalleryLightbox({
     activeIndex !== null && images.length > 0 ? (activeIndex + 1) % images.length : 0;
   const previousSrc = images[previousIndex] ?? "";
   const nextSrc = images[nextIndex] ?? "";
+  const previewIndexes = useMemo(() => {
+    if (activeIndex === null || images.length === 0) return [];
+    const count = Math.min(10, images.length);
+
+    return Array.from({ length: count }, (_, offset) => (activeIndex + offset) % images.length);
+  }, [activeIndex, images.length]);
 
   const changeTo = useCallback(
     (index: number, nextDirection = 0) => {
@@ -2016,28 +2068,56 @@ function GalleryLightbox({
             <span>{images.length}</span>
           </div>
 
-          <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/10 p-2 backdrop-blur">
-            <button
-              className="focus-ring grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/15 disabled:opacity-40"
-              type="button"
-              aria-label={labels.zoomOut}
-              disabled={zoom <= 1}
-              onClick={() => updateZoom(zoom - 0.25)}
-            >
-              <ZoomOut size={20} />
-            </button>
-            <span className="min-w-14 text-center text-xs font-extrabold tabular-nums text-white/80">
-              {Math.round(zoom * 100)}%
-            </span>
-            <button
-              className="focus-ring grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/15 disabled:opacity-40"
-              type="button"
-              aria-label={labels.zoomIn}
-              disabled={zoom >= 3}
-              onClick={() => updateZoom(zoom + 0.25)}
-            >
-              <ZoomIn size={20} />
-            </button>
+          <div className="absolute inset-x-4 bottom-4 z-20 flex flex-col items-center gap-3">
+            <div className="flex items-center gap-2 rounded-full bg-white/10 p-2 backdrop-blur">
+              <button
+                className="focus-ring grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/15 disabled:opacity-40"
+                type="button"
+                aria-label={labels.zoomOut}
+                disabled={zoom <= 1}
+                onClick={() => updateZoom(zoom - 0.25)}
+              >
+                <ZoomOut size={20} />
+              </button>
+              <span className="min-w-14 text-center text-xs font-extrabold tabular-nums text-white/80">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                className="focus-ring grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white/15 disabled:opacity-40"
+                type="button"
+                aria-label={labels.zoomIn}
+                disabled={zoom >= 3}
+                onClick={() => updateZoom(zoom + 0.25)}
+              >
+                <ZoomIn size={20} />
+              </button>
+            </div>
+            {showPreviewStrip && previewIndexes.length > 1 ? (
+              <div className="media-preview-strip max-w-[min(100%,780px)] bg-black/35 text-white backdrop-blur-xl">
+                {previewIndexes.map((index) => (
+                  <button
+                    key={`${images[index]}-${index}`}
+                    className={cn("media-preview-thumb", index === activeIndex && "is-active")}
+                    type="button"
+                    aria-label={`${labels.portfolioOpen} ${index + 1}`}
+                    onClick={() => {
+                      if (activeIndex === null) return;
+                      changeTo(index, index >= activeIndex ? 1 : -1);
+                    }}
+                  >
+                    <Image
+                      src={images[index]}
+                      alt=""
+                      fill
+                      sizes="96px"
+                      className="object-cover"
+                      quality={36}
+                    />
+                    <span className="media-preview-thumb-number">{index + 1}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <button
@@ -2058,7 +2138,10 @@ function GalleryLightbox({
           </button>
 
           <div
-            className="relative flex h-full w-full items-center justify-center overflow-hidden px-4 py-20"
+            className={cn(
+              "relative flex h-full w-full items-center justify-center overflow-hidden px-4 pt-20",
+              showPreviewStrip ? "pb-44" : "pb-20"
+            )}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
@@ -2110,7 +2193,10 @@ function GalleryLightbox({
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={activeSrc}
-                className="relative z-20 h-full max-h-[82vh] w-full max-w-[min(94vw,1040px)] lg:max-w-[min(54vw,980px)]"
+                className={cn(
+                  "relative z-20 h-full w-full max-w-[min(94vw,1040px)] lg:max-w-[min(54vw,980px)]",
+                  showPreviewStrip ? "max-h-[72vh]" : "max-h-[82vh]"
+                )}
                 initial={{ opacity: 0, x: direction * 46, scale: 0.985 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: direction * -46, scale: 0.985 }}

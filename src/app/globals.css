@@ -361,6 +361,67 @@ b,
   display: none;
 }
 
+.media-preview-strip {
+  display: flex;
+  width: 100%;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 12rem),
+    color-mix(in srgb, var(--surface) 88%, transparent);
+  padding: 0.5rem;
+  box-shadow: 0 20px 64px -40px rgba(0, 0, 0, 0.78);
+  scrollbar-width: none;
+}
+
+.media-preview-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.media-preview-thumb {
+  position: relative;
+  flex: 0 0 auto;
+  width: clamp(4.75rem, 8vw, 6rem);
+  min-height: 3.75rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, white 12%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-strong) 80%, var(--accent));
+  opacity: 0.72;
+  aspect-ratio: 4 / 3;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.media-preview-thumb:hover,
+.media-preview-thumb.is-active {
+  border-color: color-mix(in srgb, var(--accent) 80%, white);
+  box-shadow: 0 16px 40px -22px color-mix(in srgb, var(--accent) 84%, transparent);
+  opacity: 1;
+  transform: translateY(-0.1rem);
+}
+
+.media-preview-thumb-number {
+  position: absolute;
+  left: 0.35rem;
+  bottom: 0.35rem;
+  z-index: 1;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.58);
+  padding: 0.15rem 0.42rem;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1;
+  backdrop-filter: blur(10px);
+}
+
 @keyframes portfolio-marquee {
   from {
     transform: translate3d(0, 0, 0);
@@ -372,11 +433,11 @@ b,
 }
 
 .portfolio-marquee-track {
-  animation: portfolio-marquee 52s linear infinite;
+  animation: portfolio-marquee 64s linear infinite;
 }
 
 .catalog-marquee-track {
-  animation: portfolio-marquee 48s linear infinite;
+  animation: portfolio-marquee 60s linear infinite;
 }
 
 .portfolio-marquee-track:hover {

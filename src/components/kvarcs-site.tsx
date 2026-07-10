@@ -1499,14 +1499,14 @@ function StoneDetails({
           }}
         >
           <motion.div
-            className="surface grid max-h-[92vh] w-full max-w-6xl overflow-auto rounded-stone lg:grid-cols-[0.92fr_1fr]"
+            className="catalog-dialog surface rounded-stone"
             initial={{ opacity: 0, y: 36, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 28, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 220, damping: 26 }}
           >
-            <div className="grid min-h-[360px] bg-[var(--bg-primary)] lg:min-h-full lg:grid-rows-[1fr_auto]">
-              <div className="relative min-h-[320px] lg:min-h-[520px]">
+            <div className="catalog-dialog-media grid min-h-[360px] bg-[var(--bg-primary)] xl:min-h-full xl:grid-rows-[1fr_auto]">
+              <div className="relative min-h-[320px] xl:min-h-[520px]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={detailsImage}
@@ -1578,7 +1578,7 @@ function StoneDetails({
                 </div>
               </div>
             </div>
-            <div className="p-6 md:p-8">
+            <div className="catalog-dialog-info p-6 md:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="eyebrow">Quartz agglomerate</p>
@@ -1605,7 +1605,7 @@ function StoneDetails({
                 <SpecPill label={t.specs.area} value={`${stone.specs.areaM2} м²`} />
                 <SpecPill label={t.specs.surface} value={stone.surface[lang]} />
               </div>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-7 flex flex-col gap-3 2xl:flex-row">
                 <MagneticButton
                   className="justify-center px-6 py-4"
                   onClick={() => onRequestQuote(stone)}

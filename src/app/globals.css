@@ -361,8 +361,35 @@ b,
   display: none;
 }
 
+.catalog-dialog {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(22rem, 0.92fr);
+  width: min(90rem, calc(100vw - 2rem));
+  max-width: 100%;
+  max-height: calc(100dvh - 2rem);
+  overflow: hidden;
+}
+
+.catalog-dialog-media,
+.catalog-dialog-info {
+  min-width: 0;
+}
+
+.catalog-dialog-media {
+  overflow: hidden;
+}
+
+.catalog-dialog-info {
+  max-height: calc(100dvh - 2rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
 .media-preview-strip {
   display: flex;
+  min-width: 0;
+  max-width: 100%;
   width: 100%;
   gap: 0.5rem;
   overflow-x: auto;
@@ -420,6 +447,27 @@ b,
   font-weight: 800;
   line-height: 1;
   backdrop-filter: blur(10px);
+}
+
+@media (max-width: 1279px) {
+  .catalog-dialog {
+    grid-template-columns: minmax(0, 1fr);
+    width: min(52rem, calc(100vw - 2rem));
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .catalog-dialog-info {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 639px) {
+  .catalog-dialog {
+    width: calc(100vw - 1rem);
+    max-height: calc(100dvh - 1rem);
+  }
 }
 
 @keyframes portfolio-marquee {

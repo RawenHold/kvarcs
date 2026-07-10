@@ -1605,30 +1605,27 @@ function Services({ lang }: { lang: Lang }) {
           </p>
         </Reveal>
 
-        <div className="relative mt-12">
-          <div className="absolute left-8 right-8 top-1/2 hidden h-px -translate-y-1/2 bg-[linear-gradient(90deg,transparent,var(--accent),transparent)] opacity-45 md:block" />
-          <div className="absolute left-8 right-8 top-1/2 hidden h-px -translate-y-1/2 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)] blur-sm md:block" />
-          <ol className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+        <div className="service-flow mt-12">
+          <ol className="relative z-10 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
             {t.services.steps.map((step, index) => {
               const Icon = icons[index] ?? ClipboardCheck;
               return (
                 <motion.li
                   key={step}
-                  className="surface group relative flex min-h-[210px] flex-col items-center justify-center overflow-hidden rounded-stone p-5 text-center transition duration-300 hover:-translate-y-1 hover:border-[var(--accent)] hover:shadow-[var(--shadow-glow)]"
+                  className="service-step-card group flex min-h-[190px] flex-col items-center justify-center rounded-stone p-5 text-center"
+                  style={{ "--step-index": index + 1 } as CSSProperties}
                   initial={{ opacity: 0, y: 26 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.4 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(212,161,92,0.22),transparent_38%),linear-gradient(135deg,transparent,rgba(255,255,255,0.04))] opacity-70 transition group-hover:opacity-100" />
-                  <span className="pointer-events-none absolute inset-x-6 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--accent),transparent)] opacity-70" />
-                  <div className="relative z-10 grid h-16 w-16 place-items-center rounded-full bg-[var(--accent)] text-[var(--bg-primary)] shadow-[0_18px_48px_-24px_rgba(212,161,92,0.9)] transition group-hover:scale-105">
+                  <div className="service-step-icon relative z-10">
                     <Icon size={24} strokeWidth={1.8} />
                   </div>
-                  <p className="relative z-10 mt-5 text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+                  <p className="service-step-index relative z-10 mt-5">
                     0{index + 1}
                   </p>
-                  <h3 className="relative z-10 mt-2 max-w-[14rem] text-center text-[clamp(1.02rem,1.5vw,1.3rem)] font-extrabold leading-6 text-[var(--text-primary)]">
+                  <h3 className="service-step-title relative z-10 mt-2 max-w-[14rem]">
                     {step}
                   </h3>
                 </motion.li>

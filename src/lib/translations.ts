@@ -70,7 +70,7 @@ export const translations = {
     },
     services: {
       eyebrow: "Полный цикл",
-      title: "Обработчик доводит плиту до готового изделия.",
+      title: "Обработка кварцевого камня до готового изделия.",
       body: "Партнёры KVARC-S закрывают путь от выезда с образцами до установки на объекте.",
       steps: ["Выезд на объект с образцами", "Замер изделия", "Просчёт стоимости", "Изготовление изделия", "Доставка на объект", "Установка изделия"]
     },
@@ -178,7 +178,7 @@ export const translations = {
     },
     services: {
       eyebrow: "To‘liq sikl",
-      title: "Usta plitani tayyor buyumga aylantiradi.",
+      title: "Kvars toshini tayyor buyumgacha ishlov berish.",
       body: "KVARC-S hamkorlari namunalar bilan chiqishdan obyektga o‘rnatishgacha bo‘lgan jarayonni bajaradi.",
       steps: ["Namunalar bilan obyektga chiqish", "Buyumni o‘lchash", "Narxni hisoblash", "Buyumni tayyorlash", "Obyektga yetkazish", "O‘rnatish"]
     },

@@ -131,6 +131,152 @@ img {
   border: 1px solid var(--border);
 }
 
+.service-flow {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 20rem),
+    linear-gradient(135deg, color-mix(in srgb, var(--surface) 82%, var(--accent)), var(--surface));
+  padding: clamp(0.75rem, 1.2vw, 1rem);
+  box-shadow: var(--shadow-soft);
+}
+
+.service-flow::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 28%, color-mix(in srgb, var(--accent) 10%, transparent) 29%, transparent 31%),
+    radial-gradient(circle at 78% 18%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 18rem);
+  opacity: 0.85;
+}
+
+.service-flow::after {
+  position: absolute;
+  left: 3rem;
+  right: 3rem;
+  top: 50%;
+  display: none;
+  height: 1px;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 72%, transparent), transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 28%, transparent);
+  opacity: 0.7;
+}
+
+.service-step-card {
+  --step-shift: 0rem;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 84%, var(--accent)), var(--surface)),
+    var(--surface);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 7%, transparent),
+    0 18px 55px -34px rgba(0, 0, 0, 0.8);
+  transform: translateY(var(--step-shift));
+  transition:
+    border-color 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.service-step-card::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent) 34%, transparent), transparent 42%),
+    linear-gradient(135deg, transparent, color-mix(in srgb, white 5%, transparent));
+  opacity: 0.5;
+  transition: opacity 260ms ease;
+}
+
+.service-step-card::after {
+  position: absolute;
+  inset: 0.7rem;
+  z-index: -1;
+  content: "";
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 12px;
+  opacity: 0.55;
+  transition:
+    inset 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 280ms ease;
+}
+
+.service-step-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent),
+    var(--shadow-glow);
+  transform: translateY(calc(var(--step-shift) - 0.4rem));
+}
+
+.service-step-card:hover::before {
+  opacity: 0.9;
+}
+
+.service-step-card:hover::after {
+  inset: 0.45rem;
+  opacity: 0.85;
+}
+
+.service-step-icon {
+  display: grid;
+  height: 4.25rem;
+  width: 4.25rem;
+  place-items: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 22%, color-mix(in srgb, white 26%, transparent), transparent 34%),
+    linear-gradient(145deg, var(--accent), color-mix(in srgb, var(--accent) 68%, #ffffff));
+  color: var(--bg-primary);
+  box-shadow:
+    0 18px 48px -24px color-mix(in srgb, var(--accent) 88%, transparent),
+    inset 0 -10px 18px color-mix(in srgb, #000 12%, transparent);
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.service-step-card:hover .service-step-icon {
+  transform: translateY(-0.25rem) scale(1.04);
+}
+
+.service-step-index {
+  color: color-mix(in srgb, var(--accent) 78%, var(--text-muted));
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+}
+
+.service-step-title {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.15vw, 1.22rem);
+  font-weight: 700;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+@media (min-width: 768px) {
+  .service-flow::after {
+    display: block;
+  }
+}
+
+@media (min-width: 1280px) {
+  .service-step-card:nth-child(even) {
+    --step-shift: 0.85rem;
+  }
+}
+
 .partner-region {
   --partner-accent: var(--accent);
 }

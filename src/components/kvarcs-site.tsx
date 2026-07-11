@@ -55,6 +55,7 @@ import { partnerRegions, partners } from "@/lib/partners-data";
 import { siteConfig } from "@/lib/site-config";
 import { translations, type Lang } from "@/lib/translations";
 import { cn, telHref } from "@/lib/utils";
+import { QuartzCare } from "@/components/quartz-care";
 
 type Theme = "cloud" | "onyx";
 type ViewMode = "grid" | "list";
@@ -356,6 +357,7 @@ export function KvarcsSite({
         <Applications lang={lang} />
         <CatalogMarquee lang={lang} />
         <Services lang={lang} />
+        <QuartzCare lang={lang} />
         <PortfolioMarquee lang={lang} images={portfolioImages} />
         <Certificates lang={lang} images={certificateImages} />
         <Contacts lang={lang} />

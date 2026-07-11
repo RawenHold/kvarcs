@@ -74,6 +74,40 @@ export const translations = {
       body: "Партнёры KVARC-S закрывают путь от выезда с образцами до установки на объекте.",
       steps: ["Выезд на объект с образцами", "Замер изделия", "Просчёт стоимости", "Изготовление изделия", "Доставка на объект", "Установка изделия"]
     },
+    care: {
+      eyebrow: "Уход за кварцем",
+      title: "Красота поверхности — в простых привычках.",
+      lead: "Выберите ситуацию и посмотрите, как сохранить фактуру и аккуратный вид кварцевого камня на каждый день.",
+      scenarios: [
+        {
+          label: "Каждый день",
+          title: "Мягкая очистка без лишних средств",
+          body: "Протрите поверхность тёплой водой с мягким или нейтральным мылом. Используйте мягкую ткань, затем смойте остатки и вытрите насухо.",
+          action: "Вода · мягкое мыло · сухая ткань"
+        },
+        {
+          label: "Пятна и капли",
+          title: "Убирайте загрязнения без промедления",
+          body: "Свежие капли промокните сразу. Засохшее загрязнение сначала размягчите водой, затем аккуратно удалите неабразивным средством и промойте поверхность.",
+          action: "Промокнуть · размягчить · смыть"
+        },
+        {
+          label: "Высокая температура",
+          title: "Отделяйте горячее от поверхности",
+          body: "Ставьте горячую посуду и нагревающиеся приборы на термостойкую подставку. Не оставляйте источник высокой температуры прямо на кварце.",
+          action: "Всегда используйте подставку"
+        },
+        {
+          label: "Чего избегать",
+          title: "Берегите поверхность от агрессивного воздействия",
+          body: "Не используйте очистители для духовок, грилей и труб, сильные кислоты и щёлочи, абразивные губки. Не режьте продукты прямо на поверхности.",
+          action: "При случайном контакте сразу промойте водой"
+        }
+      ],
+      noSeal: "Кварцевому агломерату обычно не нужны герметизация, воск или полировка.",
+      finishNote: "На тёмных, матовых и фактурных поверхностях следы заметнее — их лучше чаще вытирать насухо.",
+      controlsLabel: "Сценарии ухода за кварцевым камнем"
+    },
     partners: {
       eyebrow: "Партнёры",
       title: "Каталог обработчиков камня",
@@ -181,6 +215,40 @@ export const translations = {
       title: "Kvars toshini tayyor buyumgacha ishlov berish.",
       body: "KVARC-S hamkorlari namunalar bilan chiqishdan obyektga o‘rnatishgacha bo‘lgan jarayonni bajaradi.",
       steps: ["Namunalar bilan obyektga chiqish", "Buyumni o‘lchash", "Narxni hisoblash", "Buyumni tayyorlash", "Obyektga yetkazish", "O‘rnatish"]
+    },
+    care: {
+      eyebrow: "Kvars parvarishi",
+      title: "Sirt go‘zalligi — oddiy odatlarda.",
+      lead: "Vaziyatni tanlang va kvars toshining fakturasi hamda ozoda ko‘rinishini har kuni qanday saqlashni ko‘ring.",
+      scenarios: [
+        {
+          label: "Har kuni",
+          title: "Ortiqcha vositalarsiz yumshoq tozalash",
+          body: "Sirtni iliq suv va yumshoq yoki neytral sovun bilan arting. Yumshoq matodan foydalaning, so‘ng qoldiqlarni yuvib, quruq qilib arting.",
+          action: "Suv · yumshoq sovun · quruq mato"
+        },
+        {
+          label: "Dog‘ va tomchilar",
+          title: "Kirni kechiktirmasdan tozalang",
+          body: "Yangi tomchilarni darhol shimdirib oling. Qotgan kirni avval suv bilan yumshating, so‘ng abrazivsiz vosita bilan ehtiyotkorlik bilan olib, sirtni yuving.",
+          action: "Shimdirish · yumshatish · yuvish"
+        },
+        {
+          label: "Yuqori harorat",
+          title: "Issiq buyumni sirtdan ajrating",
+          body: "Issiq idishlar va qiziydigan jihozlar tagiga issiqqa chidamli taglik qo‘ying. Kuchli issiqlik manbasini bevosita kvars ustida qoldirmang.",
+          action: "Doimo taglikdan foydalaning"
+        },
+        {
+          label: "Nimadan saqlanish",
+          title: "Sirtni agressiv ta’sirdan asrang",
+          body: "Duxovka, gril va quvur tozalagichlari, kuchli kislota va ishqorlar, abraziv gubkalardan foydalanmang. Mahsulotni bevosita sirt ustida kesmang.",
+          action: "Tasodifiy tegsa, darhol suv bilan yuving"
+        }
+      ],
+      noSeal: "Kvars aglomeratiga odatda germetik, mum yoki jilolash kerak emas.",
+      finishNote: "To‘q, mat va fakturali sirtlarda izlar ko‘proq bilinadi — ularni tez-tez quruq artish ma’qul.",
+      controlsLabel: "Kvars toshini parvarishlash holatlari"
     },
     partners: {
       eyebrow: "Hamkorlar",

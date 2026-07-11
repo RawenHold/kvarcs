@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 import {
   AnimatePresence,
   motion,
@@ -50,6 +50,7 @@ import {
   type TouchEvent
 } from "react";
 import { stones, type Stone } from "@/lib/catalog-data";
+import { collectImagePreloadSources } from "@/lib/image-preload";
 import { partnerRegions, partners } from "@/lib/partners-data";
 import { siteConfig } from "@/lib/site-config";
 import { translations, type Lang } from "@/lib/translations";
@@ -73,6 +74,50 @@ type CatalogPageProps = {
 
 const themeStorageKey = "kvarcs-theme-v3";
 const legacyThemeStorageKeys = ["kvarcs-theme", "kvarcs-theme-v2"] as const;
+const catalogDetailImageSizes = "(max-width: 1023px) calc(100vw - 1rem), 50vw";
+const galleryDetailImageSizes = "(max-width: 1023px) 94vw, 54vw";
+
+function useNextImagePreload(sources: readonly string[], sizes: string, quality: number) {
+  const requestedSources = useRef(new Set<string>());
+  const pendingImages = useRef(new Map<string, HTMLImageElement>());
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    sources.forEach((src) => {
+      const { props } = getImageProps({ src, alt: "", fill: true, sizes, quality });
+      const requestKey = props.srcSet ?? props.src;
+      if (requestedSources.current.has(requestKey)) return;
+
+      requestedSources.current.add(requestKey);
+      const image = new window.Image();
+      image.decoding = "async";
+      image.fetchPriority = "low";
+      if (props.sizes) image.sizes = props.sizes;
+      if (props.srcSet) image.srcset = props.srcSet;
+
+      const release = () => pendingImages.current.delete(requestKey);
+      image.onload = release;
+      image.onerror = () => {
+        requestedSources.current.delete(requestKey);
+        release();
+      };
+      pendingImages.current.set(requestKey, image);
+      image.src = props.src;
+    });
+  }, [quality, sizes, sources]);
+
+  useEffect(
+    () => () => {
+      pendingImages.current.forEach((image) => {
+        image.onload = null;
+        image.onerror = null;
+      });
+      pendingImages.current.clear();
+    },
+    []
+  );
+}
 const logoVersion = "20260709-theme-locked";
 const logoSourceByTheme: Readonly<Record<Theme, string>> = Object.freeze({
   cloud: "/logo-dark.svg",
@@ -1461,6 +1506,15 @@ function StoneDetails({
 
     return Array.from({ length: count }, (_, offset) => stones[(currentIndex + offset) % stones.length]);
   }, [stone]);
+  const preloadSources = useMemo(
+    () =>
+      collectImagePreloadSources(
+        detailImages,
+        previewStones.map((previewStone) => previewStone.detailImages?.[0] ?? previewStone.image)
+      ),
+    [detailImages, previewStones]
+  );
+  useNextImagePreload(preloadSources, catalogDetailImageSizes, 82);
 
   useEffect(() => {
     if (!stone) return;
@@ -1537,7 +1591,7 @@ function StoneDetails({
                         alt={stone.name}
                         fill
                         className={detailsImageClassName}
-                        sizes="(max-width: 1023px) calc(100vw - 1rem), 50vw"
+                        sizes={catalogDetailImageSizes}
                         quality={82}
                         priority
                       />
@@ -1944,6 +1998,15 @@ function GalleryLightbox({
 
     return Array.from({ length: count }, (_, offset) => (activeIndex + offset) % images.length);
   }, [activeIndex, images.length]);
+  const preloadSources = useMemo(
+    () =>
+      collectImagePreloadSources(
+        [activeSrc, previousSrc, nextSrc],
+        previewIndexes.map((index) => images[index] ?? "")
+      ),
+    [activeSrc, images, nextSrc, previewIndexes, previousSrc]
+  );
+  useNextImagePreload(preloadSources, galleryDetailImageSizes, 90);
 
   const changeTo = useCallback(
     (index: number, nextDirection = 0) => {
@@ -2215,7 +2278,7 @@ function GalleryLightbox({
                   src={activeSrc}
                   alt={`KVARC-S gallery ${(activeIndex ?? 0) + 1}`}
                   fill
-                  sizes="100vw"
+                  sizes={galleryDetailImageSizes}
                   className="object-contain transition-transform duration-200"
                   quality={90}
                   priority

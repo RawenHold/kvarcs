@@ -438,6 +438,14 @@ b,
   display: none;
 }
 
+.media-preview-strip > :first-child {
+  margin-inline-start: auto;
+}
+
+.media-preview-strip > :last-child {
+  margin-inline-end: auto;
+}
+
 .media-preview-thumb {
   position: relative;
   flex: 0 0 auto;

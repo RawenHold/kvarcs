@@ -1467,8 +1467,13 @@ function StoneDetails({
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [onClose, stone]);
 
   useEffect(() => {
@@ -1487,7 +1492,7 @@ function StoneDetails({
     <AnimatePresence>
       {stone ? (
         <motion.div
-          className="fixed inset-0 z-[85] grid place-items-center bg-black/60 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[150] flex items-start justify-center overflow-y-auto overscroll-contain bg-black/60 p-2 backdrop-blur-md sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -1499,128 +1504,132 @@ function StoneDetails({
           }}
         >
           <motion.div
-            className="catalog-dialog surface rounded-stone"
+            className="catalog-dialog-stack"
             initial={{ opacity: 0, y: 36, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 28, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 220, damping: 26 }}
           >
-            <div className="catalog-dialog-media grid min-h-[360px] bg-[var(--bg-primary)] xl:min-h-full xl:grid-rows-[1fr_auto]">
-              <div className="relative min-h-[320px] xl:min-h-[520px]">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={detailsImage}
-                    className="absolute inset-0"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <Image
-                      src={detailsImage}
-                      alt={stone.name}
-                      fill
-                      className={detailsImageClassName}
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                      quality={82}
-                      priority
-                    />
-                  </motion.div>
-                </AnimatePresence>
-                <p className="absolute bottom-5 left-5 rounded-full bg-black/45 px-4 py-2 text-sm font-extrabold text-white backdrop-blur">
-                  KVARC-S #{stone.number}
-                </p>
-                {detailImages.length > 1 ? (
-                  <div className="absolute bottom-5 right-5 flex gap-1.5">
-                    {detailImages.map((image, index) => (
-                      <button
-                        key={image}
-                        className={cn(
-                          "focus-ring h-2.5 rounded-full transition",
-                          activeImageIndex === index ? "w-7 bg-white" : "w-2.5 bg-white/45"
-                        )}
-                        type="button"
-                        aria-label={`${t.common.view} ${index + 1}`}
-                        onClick={() => setActiveImageIndex(index)}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-              <div className="border-t border-[var(--border)] p-3">
-                <div className="media-preview-strip">
-                  {previewStones.map((previewStone) => {
-                    const previewImage = previewStone.detailImages?.[0] ?? previewStone.image;
+            <div className="catalog-dialog surface relative rounded-stone">
+              <button
+                className="focus-ring absolute right-4 top-4 z-20 grid h-11 w-11 place-items-center rounded-full border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] text-[var(--text-primary)] shadow-lg backdrop-blur transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                type="button"
+                aria-label={t.common.close}
+                autoFocus
+                onClick={onClose}
+              >
+                <X size={20} />
+              </button>
 
-                    return (
-                      <button
-                        key={previewStone.slug}
-                        className={cn(
-                          "media-preview-thumb",
-                          previewStone.slug === stone.slug && "is-active"
-                        )}
-                        type="button"
-                        aria-label={`${t.common.view} ${previewStone.name}`}
-                        onClick={() => onSelectStone(previewStone)}
-                      >
-                        <Image
-                          src={previewImage}
-                          alt=""
-                          fill
-                          sizes="96px"
-                          className="object-contain p-1"
-                          quality={42}
+              <div className="catalog-dialog-media bg-[var(--bg-primary)]">
+                <div className="catalog-dialog-visual">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={detailsImage}
+                      className="absolute inset-0"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Image
+                        src={detailsImage}
+                        alt={stone.name}
+                        fill
+                        className={detailsImageClassName}
+                        sizes="(max-width: 1023px) calc(100vw - 1rem), 50vw"
+                        quality={82}
+                        priority
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                  <p className="absolute bottom-5 left-5 rounded-full bg-black/45 px-4 py-2 text-sm font-extrabold text-white backdrop-blur">
+                    KVARC-S #{stone.number}
+                  </p>
+                  {detailImages.length > 1 ? (
+                    <div className="absolute bottom-5 right-5 flex gap-1.5">
+                      {detailImages.map((image, index) => (
+                        <button
+                          key={image}
+                          className={cn(
+                            "focus-ring h-2.5 rounded-full transition",
+                            activeImageIndex === index ? "w-7 bg-white" : "w-2.5 bg-white/45"
+                          )}
+                          type="button"
+                          aria-label={`${t.common.view} ${index + 1}`}
+                          onClick={() => setActiveImageIndex(index)}
                         />
-                        <span className="media-preview-thumb-number">#{previewStone.number}</span>
-                      </button>
-                    );
-                  })}
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               </div>
-            </div>
-            <div className="catalog-dialog-info p-6 md:p-8">
-              <div className="flex items-start justify-between gap-4">
-                <div>
+              <div className="catalog-dialog-info p-5 sm:p-6 md:p-8">
+                <div className="pr-14">
                   <p className="eyebrow">Quartz agglomerate</p>
                   <h3 className="display-title mt-3 text-4xl leading-tight md:text-5xl">
                     {stone.name}
                   </h3>
                 </div>
-                <button
-                  className="focus-ring grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--border)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                  type="button"
-                  aria-label={t.common.close}
-                  onClick={onClose}
-                >
-                  <X size={20} />
-                </button>
+                <p className="mt-5 text-base leading-7 text-[var(--text-secondary)] md:mt-6 md:text-lg md:leading-8">
+                  {stone.description[lang]}
+                </p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2 md:mt-7">
+                  <SpecPill label={t.specs.width} value={`${stone.specs.widthMm} мм`} />
+                  <SpecPill label={t.specs.height} value={`${stone.specs.heightMm} мм`} />
+                  <SpecPill label={t.specs.thickness} value={`${stone.specs.thicknessMm} мм`} />
+                  <SpecPill label={t.specs.area} value={`${stone.specs.areaM2} м²`} />
+                  <SpecPill label={t.specs.surface} value={stone.surface[lang]} />
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2 md:mt-7">
+                  <MagneticButton
+                    className="justify-center px-6 py-4"
+                    onClick={() => onRequestQuote(stone)}
+                  >
+                    {t.common.price}
+                    <Send size={18} />
+                  </MagneticButton>
+                  <a
+                    className="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-[var(--border)] px-6 py-4 font-extrabold transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                    href={telHref(contact.phone)}
+                  >
+                    <Phone size={18} />
+                    {contact.phone}
+                  </a>
+                </div>
               </div>
-              <p className="mt-6 text-lg leading-8 text-[var(--text-secondary)]">
-                {stone.description[lang]}
-              </p>
-              <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                <SpecPill label={t.specs.width} value={`${stone.specs.widthMm} мм`} />
-                <SpecPill label={t.specs.height} value={`${stone.specs.heightMm} мм`} />
-                <SpecPill label={t.specs.thickness} value={`${stone.specs.thicknessMm} мм`} />
-                <SpecPill label={t.specs.area} value={`${stone.specs.areaM2} м²`} />
-                <SpecPill label={t.specs.surface} value={stone.surface[lang]} />
-              </div>
-              <div className="mt-7 flex flex-col gap-3 2xl:flex-row">
-                <MagneticButton
-                  className="justify-center px-6 py-4"
-                  onClick={() => onRequestQuote(stone)}
-                >
-                  {t.common.price}
-                  <Send size={18} />
-                </MagneticButton>
-                <a
-                  className="focus-ring inline-flex items-center justify-center gap-2 rounded-full border border-[var(--border)] px-6 py-4 font-extrabold transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                  href={telHref(contact.phone)}
-                >
-                  <Phone size={18} />
-                  {contact.phone}
-                </a>
-              </div>
+            </div>
+
+            <div className="catalog-preview-panel surface">
+              <nav className="media-preview-strip" aria-label={t.common.view}>
+                {previewStones.map((previewStone) => {
+                  const previewImage = previewStone.detailImages?.[0] ?? previewStone.image;
+
+                  return (
+                    <button
+                      key={previewStone.slug}
+                      className={cn(
+                        "media-preview-thumb",
+                        previewStone.slug === stone.slug && "is-active"
+                      )}
+                      type="button"
+                      aria-label={`${t.common.view} ${previewStone.name}`}
+                      aria-pressed={previewStone.slug === stone.slug}
+                      onClick={() => onSelectStone(previewStone)}
+                    >
+                      <Image
+                        src={previewImage}
+                        alt=""
+                        fill
+                        sizes="96px"
+                        className="object-contain p-1"
+                        quality={42}
+                      />
+                      <span className="media-preview-thumb-number">#{previewStone.number}</span>
+                    </button>
+                  );
+                })}
+              </nav>
             </div>
           </motion.div>
         </motion.div>

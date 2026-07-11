@@ -15,7 +15,6 @@ import { moveCareStep } from "@/lib/quartz-care";
 import { translations, type Lang } from "@/lib/translations";
 
 const scenarioIcons: readonly LucideIcon[] = [Droplets, Sparkles, Flame, ShieldAlert];
-const scenarioStates = ["daily", "stain", "heat", "avoid"] as const;
 
 export function QuartzCare({ lang }: { lang: Lang }) {
   const copy = translations[lang].care;
@@ -23,8 +22,6 @@ export function QuartzCare({ lang }: { lang: Lang }) {
   const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const reducedMotion = useReducedMotion();
   const activeScenario = copy.scenarios[activeIndex];
-  const activeState = scenarioStates[activeIndex];
-  const ActiveIcon = scenarioIcons[activeIndex] ?? Droplets;
 
   function handleScenarioKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -54,45 +51,6 @@ export function QuartzCare({ lang }: { lang: Lang }) {
         </motion.header>
 
         <div className="quartz-care-layout">
-          <motion.div
-            className="quartz-care-stage"
-            initial={reducedMotion ? false : { opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, amount: 0.35 }}
-            transition={{ duration: reducedMotion ? 0 : 0.36 }}
-            aria-hidden="true"
-          >
-            <div className="quartz-care-stage-meta">
-              <span>KVARC-S / CARE</span>
-              <span>0{activeIndex + 1}</span>
-            </div>
-            <div className="quartz-care-slab">
-              <div className="quartz-care-mineral-lines" />
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={activeState}
-                  className={`quartz-care-visual quartz-care-visual--${activeState}`}
-                  initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, x: -14 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.03, x: 14 }}
-                  transition={{ duration: reducedMotion ? 0 : 0.3 }}
-                >
-                  <span className="quartz-care-visual-icon">
-                    <ActiveIcon size={34} strokeWidth={1.4} />
-                  </span>
-                  <span className="quartz-care-visual-orbit" />
-                  <span className="quartz-care-visual-mark quartz-care-visual-mark--one" />
-                  <span className="quartz-care-visual-mark quartz-care-visual-mark--two" />
-                  <span className="quartz-care-visual-mark quartz-care-visual-mark--three" />
-                </motion.div>
-              </AnimatePresence>
-              <div className="quartz-care-slab-caption">
-                <span>{activeScenario.label}</span>
-                <span>QUARTZ SURFACE</span>
-              </div>
-            </div>
-          </motion.div>
-
           <div className="quartz-care-content">
             <div className="quartz-care-controls" aria-label={copy.controlsLabel}>
               {copy.scenarios.map((scenario, index) => {

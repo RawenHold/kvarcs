@@ -588,20 +588,20 @@ b,
 }
 
 .quartz-care-header {
-  width: min(100%, 58rem);
+  width: min(100%, 52rem);
   margin-inline: auto;
   text-align: center;
 }
 
 .quartz-care-title {
   margin-top: 1rem;
-  font-size: clamp(2.35rem, 5vw, 5.2rem);
-  line-height: 0.98;
+  font-size: clamp(2.25rem, 4vw, 3.75rem);
+  line-height: 1.05;
   text-wrap: balance;
 }
 
 .quartz-care-lead {
-  max-width: 46rem;
+  max-width: 42rem;
   margin: 1.35rem auto 0;
   color: var(--text-secondary);
   font-size: clamp(1rem, 1.4vw, 1.16rem);
@@ -610,11 +610,9 @@ b,
 }
 
 .quartz-care-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(20rem, 1fr);
-  gap: clamp(1.5rem, 4vw, 4.5rem);
-  align-items: center;
+  width: min(100%, 68rem);
   margin-top: clamp(2.75rem, 5vw, 4.5rem);
+  margin-inline: auto;
 }
 
 .quartz-care-stage {
@@ -803,12 +801,12 @@ b,
 
 .quartz-care-controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   background: color-mix(in srgb, var(--surface) 72%, transparent);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 18px 50px -34px rgba(0, 0, 0, 0.5);
 }
 
 .quartz-care-control {
@@ -820,7 +818,7 @@ b,
   align-items: center;
   border: 0;
   border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 0;
   background: transparent;
   padding: 0.9rem;
   color: var(--text-secondary);
@@ -828,8 +826,7 @@ b,
   transition: background-color 220ms ease, color 220ms ease;
 }
 
-.quartz-care-control:nth-child(2n) { border-right: 0; }
-.quartz-care-control:nth-last-child(-n + 2) { border-bottom: 0; }
+.quartz-care-control:last-child { border-right: 0; }
 
 .quartz-care-control::after {
   position: absolute;
@@ -869,8 +866,8 @@ b,
 }
 
 .quartz-care-scenario {
-  min-height: 18rem;
-  padding-block: clamp(2rem, 4vw, 3.25rem);
+  min-height: 0;
+  padding-block: clamp(2rem, 4vw, 2.75rem);
   border-bottom: 1px solid var(--border-strong);
 }
 
@@ -882,7 +879,7 @@ b,
 }
 
 .quartz-care-scenario h3 {
-  max-width: 35rem;
+  max-width: 46rem;
   margin-top: 0.8rem;
   font-family: var(--font-display);
   font-size: clamp(1.8rem, 3vw, 3rem);
@@ -892,7 +889,7 @@ b,
 }
 
 .quartz-care-scenario-body {
-  max-width: 39rem;
+  max-width: 49rem;
   margin-top: 1.2rem;
   color: var(--text-secondary);
   font-size: 1rem;
@@ -913,6 +910,7 @@ b,
 
 .quartz-care-notes {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
   padding-top: 1.35rem;
 }
@@ -933,36 +931,17 @@ b,
   color: var(--accent);
 }
 
-@keyframes quartz-care-shimmer {
-  0%, 18% { transform: translateX(-38%); opacity: 0; }
-  46% { opacity: 0.7; }
-  74%, 100% { transform: translateX(38%); opacity: 0; }
-}
-
-@keyframes quartz-care-orbit {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes quartz-care-dissolve {
-  to { opacity: 0.28; transform: scale(0.72); filter: blur(2px); }
-}
-
-@keyframes quartz-care-heat {
-  50% { opacity: 0.6; transform: scale(1.04); }
-}
-
 @media (max-width: 1023px) {
-  .quartz-care-layout {
-    grid-template-columns: minmax(0, 1fr);
+  .quartz-care-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .quartz-care-slab {
-    min-height: clamp(21rem, 56vw, 31rem);
+  .quartz-care-control {
+    border-bottom: 1px solid var(--border);
   }
 
-  .quartz-care-scenario {
-    min-height: 15rem;
-  }
+  .quartz-care-control:nth-child(2n) { border-right: 0; }
+  .quartz-care-control:nth-last-child(-n + 2) { border-bottom: 0; }
 }
 
 @media (max-width: 639px) {
@@ -971,7 +950,7 @@ b,
   }
 
   .quartz-care-title {
-    font-size: clamp(2.25rem, 11vw, 3.35rem);
+    font-size: clamp(2.2rem, 10vw, 3rem);
   }
 
   .quartz-care-lead {
@@ -979,24 +958,7 @@ b,
   }
 
   .quartz-care-layout {
-    gap: 1.25rem;
     margin-top: 2.25rem;
-  }
-
-  .quartz-care-stage {
-    padding: 0.55rem;
-  }
-
-  .quartz-care-stage-meta {
-    padding: 0.15rem 0.1rem 0.55rem;
-  }
-
-  .quartz-care-slab {
-    min-height: clamp(18rem, 86vw, 23rem);
-  }
-
-  .quartz-care-slab-caption {
-    align-items: flex-end;
   }
 
   .quartz-care-control {
@@ -1015,7 +977,7 @@ b,
   }
 
   .quartz-care-scenario {
-    min-height: 18rem;
+    min-height: 0;
     padding-block: 1.75rem;
   }
 
@@ -1031,12 +993,8 @@ b,
     font-size: 0.7rem;
     line-height: 1.45;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .quartz-care-slab::before,
-  .quartz-care-visual-orbit,
-  .quartz-care-visual-mark {
-    animation: none !important;
+  .quartz-care-notes {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
